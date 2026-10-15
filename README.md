@@ -17,6 +17,7 @@ reference/
   blocks-factory.json         the same, for tools
   what-blocks-model.md        what each factory block emulates, plus every
                               cabinet, microphone and artist IR
+  onboarding.md               the first-run interview, with its question set
   choosing-blocks.md          how to pick a chain for a given request
   blocks-user-catalog.md      blocks this device has on top (generated locally)
   blocks-user.json            the same, for tools
@@ -27,6 +28,7 @@ tools/
   anagram.py                  USB protocol library
   cli.py                      command line
   validate.py                 preset validator
+  setup_rig.py                infers your rig from the presets on the pedal
   analyze.py                  profiles how you use the pedal
   midi.py                     preset/scene/mode switching over USB MIDI
   market.py                   fetches descriptions for installed blocks
@@ -39,8 +41,14 @@ tools/
 pip install hidapi          # the only dependency, and only for talking to the pedal
 ```
 
-Then `cp rig.example.yaml rig.yaml` and fill it in. Designing and validating tones works with nothing plugged
-in; `info`, `presets`, `get` and `audition` need the pedal attached.
+Then just ask the assistant for a tone. On the first run it notices `rig.yaml` is
+missing, reads your blocks and presets off the pedal, works out what it can about
+your rig, and asks you the rest as multiple-choice questions — so the file gets
+written for you. If you would rather do it by hand, `cp rig.example.yaml rig.yaml`
+and fill it in.
+
+Designing and validating tones works with nothing plugged in; `info`, `presets`,
+`get` and `audition` need the pedal attached.
 
 > **Quit Darkglass Suite before using the device commands.** It holds the pedal's
 > control interface exclusively, and so does a browser tab that has connected to it.
@@ -103,6 +111,7 @@ occupied slot unless you pass `--force`.
 | `cli.py validate <file>` | check a document, no device needed |
 | `cli.py audition <file>` | play it on the pedal, saving nothing |
 | `cli.py save <slot> <file>` | write into a slot, e.g. `save 17A tone.json` |
+| `cli.py setup` | first run: infer your rig and draft `rig.yaml` |
 | `cli.py analyze` | profile what you own and how you use it |
 | `cli.py market` | what the shop says about your installed blocks |
 | `cli.py goto <slot>` | switch preset over MIDI |

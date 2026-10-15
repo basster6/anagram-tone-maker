@@ -15,9 +15,14 @@ Command line front end for the Anagram tone maker skill.
     python3 tools/cli.py scene 2|next|prev|default
     python3 tools/cli.py tuner | tap
     python3 tools/cli.py delete 41A --yes
+    python3 tools/cli.py setup [--force]
     python3 tools/cli.py analyze [dump.json]
     python3 tools/cli.py market [search-term]
     python3 tools/cli.py refresh-blocks
+
+`setup` is the first-run helper: it infers what it can about the rig from the
+presets already on the pedal and writes a draft `rig.yaml`, leaving the questions
+only a human can answer marked ASK. See `reference/onboarding.md`.
 
 `info`, `presets`, `get`, `audition`, `save`, `delete` and `refresh-blocks` need the
 pedal plugged in and Darkglass Suite closed. The MIDI commands - `goto`, `mode`,
@@ -235,6 +240,35 @@ def cmd_delete(target: str, yes: bool) -> int:
     return 0 if gone else 1
 
 
+def cmd_setup(force: bool) -> int:
+    """First run: infer the rig from stored presets, draft rig.yaml, list the rest."""
+    from setup_rig import detect, draft, report
+
+    # A first-time user may not have plugged in yet, and the first command of the
+    # onboarding flow must not dead-end on that. Draft from nothing instead.
+    presets: list[dict] = []
+    try:
+        with _device() as dev:
+            presets = [
+                {"filename": slot["filename"], "document": dev.get_preset(slot["filename"])}
+                for slot in dev.preset_slots()
+            ]
+    except Exception as exc:
+        print(f"Could not read the pedal ({exc})")
+        print("Drafting from nothing - every field is left for you to answer.\n")
+
+    found = detect(presets)
+    print(report(found))
+
+    target = HERE.parent / "rig.yaml"
+    if target.exists() and not force:
+        print(f"\n{target.name} already exists - left alone. Pass --force to redraft it.")
+        return 0
+    target.write_text(draft(found))
+    print(f"\nWrote a draft {target.name}. Ask the questions above, then fill in the ASK lines.")
+    return 0
+
+
 def cmd_analyze(dump: str | None) -> int:
     """Profile what this player owns and how they actually use it."""
     from analyze import collect, to_markdown
@@ -313,6 +347,7 @@ def main(argv: list[str]) -> int:
         if cmd in ("tuner", "tap"):  return cmd_midi_simple(cmd)
         if cmd == "delete":
             return cmd_delete([a for a in rest if a != "--yes"][0], "--yes" in rest)
+        if cmd == "setup":           return cmd_setup("--force" in rest)
         if cmd == "analyze":         return cmd_analyze(rest[0] if rest else None)
         if cmd == "market":          return cmd_market(rest[0] if rest else None)
         if cmd == "refresh-blocks":  return cmd_refresh_blocks()

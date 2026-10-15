@@ -24,8 +24,13 @@ it on the pedal.
    player owns and how they actually use it — which blocks they reach for, where
    their settings sit against the factory defaults, which cabinet and model files
    exist on the device. Prefer their habits over generic choices.
-1. **Read `rig.yaml`** (the user's copy of `rig.example.yaml`; it may not exist
-   yet, in which case ask rather than assume). It says what instrument they play and what sits
+1. **Read `rig.yaml`** (the user's copy of `rig.example.yaml`). **If it does not
+   exist, this is their first run — stop and follow `reference/onboarding.md`
+   before anything else.** That flow pulls the block catalogue and marketplace
+   descriptions off their own pedal, infers what it can about the rig from the
+   presets already on it, and asks the rest as multiple-choice questions. Do not
+   start a tone with an empty rig and do not fill it in by assumption.
+   `rig.yaml` says what instrument they play and what sits
    before, after, and in the pedal's FX loop. A tone that ignores the rig is
    wrong even when the JSON is valid — do not add a cab block when a real cab
    follows the pedal, and do not add a reverb when a reverb lives in the loop.
@@ -45,6 +50,29 @@ it on the pedal.
    mistakes that are easy to repeat.
 5. **Follow `reference/preset-format.md`** when writing the document.
 6. **Validate before you show anything:** `python3 tools/cli.py validate tone.json`.
+
+## First run
+
+When `rig.yaml` is missing, set the player up before designing anything.
+`reference/onboarding.md` has the whole flow; the shape of it is:
+
+```sh
+python3 tools/cli.py refresh-blocks   # their blocks, not the bundled snapshot
+python3 tools/cli.py market           # what each installed block models
+python3 tools/cli.py analyze          # how they actually use the pedal
+python3 tools/cli.py setup            # infer the rig, draft rig.yaml
+```
+
+Then ask what the pedal cannot know — the instrument, the gear before and after,
+whether an expression pedal is plugged in, what they play — **using your
+structured question tool** (`AskUserQuestion` in Claude Code, or the equivalent),
+two to four at a time, with concrete options to pick from. Picking beats typing,
+which is the entire reason to ask instead of handing them the YAML.
+`reference/onboarding.md` carries the question set and the options worth offering.
+
+`setup` is deliberately cautious: it reports the evidence behind each inference
+and refuses to fill in a field when the evidence is thin, because a confidently
+wrong rig file is worse than an empty one. Trust what it declines to guess.
 
 ## Look the tone up before you design it
 
