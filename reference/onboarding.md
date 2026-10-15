@@ -70,10 +70,16 @@ Rules that make it painless:
 
 - *Standard* · *Drop D* · *Half step down* · *BEAD or lower*
 
-**Expression pedal.** Ask unless `setup` found one bound. It is the single most
-useful control on the pedal and binding one that is not plugged in wastes it.
+**Expression pedal.** Owning one and having it plugged in are different facts,
+and only the second decides whether to bind it — so offer all three:
 
-- *Nothing plugged in* · *Yes, there is one*
+- *Plugged in* — bind it freely
+- *I have one but usually leave it unplugged* — writes `ask`, and the assistant
+  offers it only when a tone would really benefit
+- *I do not have one* — never bind it
+
+`setup` can see that presets bind `exp.pedal`, which proves one exists somewhere;
+it cannot see the jack. Ask anyway.
 
 **What is in the FX loop**, if `setup` found a loop block.
 

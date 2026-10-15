@@ -157,11 +157,8 @@ def report(found: dict) -> str:
         out.append("    FX loop     no send, return or fxloop block in any preset")
 
     if found["expBound"]:
-        out.append(
-            f"    exp. pedal  bound in {found['expBound']} preset(s) - but factory presets"
-            " ship with"
-        )
-        out.append("                those bindings, so this proves nothing. Ask.")
+        out.append(f"    exp. pedal  bound in {found['expBound']} preset(s), so one exists -")
+        out.append("                but a binding cannot say whether it is plugged in now. Ask.")
     else:
         out.append("    exp. pedal  never bound in any preset")
 
@@ -173,7 +170,7 @@ def report(found: dict) -> str:
         "    3. before         pedals in front, and which are always on",
         "    4. after          amp, cab, desk or interface the outputs feed",
         "    5. fx_loop        what is actually in the loop, if anything",
-        "    6. exp. pedal     whether one is plugged into the EXP jack",
+        "    6. exp. pedal     whether they own one, and whether it is plugged in",
         "    7. preferences    genres, reference tones, things they dislike",
         "",
         "Confirm the detected values too - they are inferred from old presets and",
@@ -188,7 +185,10 @@ def _yes_no(flag: bool) -> str:
 
 def _exp_note(found: dict) -> str:
     if found["expBound"]:
-        return f"{found['expBound']} preset(s) bind it, but factory presets do that too."
+        return (
+            f"{found['expBound']} preset(s) bind it, so one exists - but that cannot "
+            "say whether it is plugged in."
+        )
     return "No preset binds it."
 
 
@@ -267,8 +267,8 @@ outputs:
 # footswitches are built in; the expression pedal is a jack you may or may not
 # have something plugged into.
 actuators:
-  expression_pedal: false  # ASK - set true only once they confirm one is plugged
-                           # in. {_exp_note(found)}
+  # true = plugged in | false = do not own one | ask = own one, usually unplugged
+  expression_pedal: {"ask" if found["expBound"] else "false"}  # ASK to confirm. {_exp_note(found)}
 
 preferences:
   style: ""              # ASK - genres, reference tones, how they like to work

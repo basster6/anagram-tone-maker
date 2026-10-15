@@ -43,7 +43,11 @@ outputs:
 # footswitches are built in; the expression pedal is a jack you may or may not have
 # something plugged into.
 actuators:
-  expression_pedal: false   # true once a pedal is plugged into the EXP jack
+  # true  - plugged in, bind it freely
+  # false - do not own one, never bind it
+  # ask   - own one but usually leave it unplugged, so the assistant should ask
+  #         before building a tone around it
+  expression_pedal: ask
 
 preferences:
   # Free text the assistant should respect: genres, references, pet hates.

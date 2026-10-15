@@ -209,11 +209,44 @@ pushed version, scene 3 a pulled-back one — adjusted to what the tone is for.
 Bindings map the pedal's hardware to parameters: `pot1`-`pot6`, `foot1`-`foot3`,
 `exp.pedal`. **Check `actuators` in `rig.yaml` first** - binding the expression
 pedal when no pedal is plugged into the jack just wastes the best control you
-have, so put that parameter on a spare pot instead. A binding names a target by `row`, `block` and `symbol`, with an
+have, so put that parameter on a spare pot instead. `expression_pedal: ask` means
+they own one but usually leave it unplugged — see below. A binding names a target by `row`, `block` and `symbol`, with an
 optional `min`/`max` pair narrowing the sweep — and `min` above `max` inverts it
 on purpose. `:bypass` is a valid symbol for switching a block on and off.
 Footswitch bindings only act in Stomp mode; in Scene mode the footswitches pick
 scenes, so say so when you bind one.
+
+## When a tone wants something physically plugged in
+
+Some of what would improve a tone needs the player to get up and patch something:
+an expression pedal into the EXP jack, a pedal into the FX loop, a different
+cabinet. Do not silently design around the gap, and do not silently assume it is
+there. **Ask, at the moment it matters, and build either way.**
+
+`rig.yaml` marks these. `actuators.expression_pedal: ask` and an `fx_loop` with
+`used: true` but no devices both mean the same thing: available in principle,
+not currently wired.
+
+So when a tone would genuinely be better with one — a filter sweep that wants a
+foot, a wah, a volume swell, a reverb that belongs in the loop — say what you
+would put there and what it would do, and ask whether they want to plug it in.
+Use the structured question tool, with the alternative as a real option:
+
+> *Plug in the expression pedal* — the filter sweep goes under your foot
+> *Keep it on a pot* — same tone, swept by hand
+
+Two rules make this safe to do:
+
+- **Never make the tone depend on the answer.** Write it so it works unplugged,
+  with the parameter on a spare pot, and move it to `exp.pedal` only if they say
+  yes. A preset that needs hardware they do not have plugged in is a broken
+  preset.
+- **Ask only when it genuinely helps.** A parameter nobody sweeps mid-song does
+  not justify asking anyone to get up. If a pot would do, use a pot and say
+  nothing.
+
+When they do plug something in, offer to update `rig.yaml` so the next tone
+starts from the truth.
 
 ## Working with the pedal
 

@@ -133,6 +133,8 @@ mush — which is the opposite of loud.
   means you need one.
 - Check `actuators` before binding. Binding an expression pedal that is not
   plugged in wastes the best control available — put it on a spare pot instead.
+  `ask` means they own one but usually leave it unplugged: design it on a pot,
+  then offer to move it to the pedal when a tone would really benefit.
 
 ## Let their own presets settle the details
 
