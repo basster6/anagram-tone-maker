@@ -1,0 +1,52 @@
+# Your rig, as the assistant should understand it.
+# Everything here is optional - delete what does not apply. The more you fill in,
+# the better the tones it designs will fit what you actually plug in.
+
+instrument:
+  # e.g. "Fender Jazz Bass, passive, flatwound" / "Dingwall NG3, active"
+  description: ""
+  pickups: ""          # passive | active | piezo | ...
+  tuning: ""           # e.g. "BEAD" / "drop D" / "standard 4-string"
+
+# What the signal hits BEFORE the Anagram's input.
+before:
+  - name: ""           # e.g. "Boss TU-3"
+    role: ""           # tuner | compressor | dirt | preamp | ...
+    always_on: false
+
+# What the signal hits AFTER the Anagram's outputs.
+after:
+  - name: ""           # e.g. "Aguilar Tone Hammer 500 -> 2x10 cab"
+    role: ""           # amp | cab | power amp | desk | interface | ...
+    notes: ""          # e.g. "amp EQ set flat, runs fairly loud"
+
+# The Anagram's SEND / RETURN loop. Put a `urn:darkglass-anagram:fxloop` block in
+# the chain where this gear should sit, and leave that job to the pedal instead of
+# duplicating it with an internal block.
+fx_loop:
+  used: false
+  devices:
+    - name: ""         # e.g. "Strymon BigSky"
+      role: ""         # reverb | delay | modulation | ...
+      notes: ""        # e.g. "set to a long hall, mix 30%"
+
+# Where the sound ends up. The `urn:darkglass-anagram:output` block switches these
+# per preset: xlrL, xlrR, jackL, jackR, headphones (each 0 or 1).
+outputs:
+  xlr: ""              # e.g. "to FOH, post-cab"
+  jack: ""             # e.g. "to amp return, no cab sim"
+  headphones: ""       # e.g. "practice only"
+  # Set true when a real cab is in the path, so cab sim is skipped on that output.
+  real_cab_after_jack: false
+
+# Which of the pedal's ten actuators are actually usable. The six pots and three
+# footswitches are built in; the expression pedal is a jack you may or may not have
+# something plugged into.
+actuators:
+  expression_pedal: false   # true once a pedal is plugged into the EXP jack
+
+preferences:
+  # Free text the assistant should respect: genres, references, pet hates.
+  style: ""            # e.g. "console and studio voicings, dense serial chains"
+  headroom: ""         # e.g. "keep it clean, drive comes from the amp"
+  avoid: []            # e.g. ["heavy compression", "synth octave"]
