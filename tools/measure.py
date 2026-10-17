@@ -461,6 +461,7 @@ def analyze_performance(dry, wet) -> dict:
     # of the test levels above describe their real playing.
     peak = float(np.max(np.abs(dry))) if n else 0.0
     report = {
+        "seconds": round(n / FS, 1),
         "dryPeakDbfs": round(db(peak), 1),
         "dryRmsDbfs": round(db(rms(dry)), 1),
         "dryCrestDb": round(db(peak) - db(rms(dry)), 1),
@@ -531,21 +532,30 @@ def analyze_performance(dry, wet) -> dict:
     # frames are long and zero-padded further; a short frame reads both as one.
     size, hop2, nfft = 8192, 4096, 32768
     fd, fw = _frames(dry, size, hop2), _frames(wet_aligned, size, hop2)
-    below, at = [], []
+    below, at, dry_below, dry_at = [], [], [], []
     win = np.hanning(size)
     freqs = np.fft.rfftfreq(nfft, 1 / FS)
     for a, b in zip(fd, fw):
         f0 = _f0(a)
         if not f0 or f0 / 2 < 25:
             continue
-        spec = np.abs(np.fft.rfft(b * win, nfft))
-        def near(f):
+        def near(spec, f):
             sel = (freqs >= f * 0.95) & (freqs <= f * 1.05)
             return spec[sel].max() if sel.any() else 0.0
-        below.append(near(f0 / 2))
-        at.append(near(f0))
+        wet_spec = np.abs(np.fft.rfft(b * win, nfft))
+        dry_spec = np.abs(np.fft.rfft(a * win, nfft))
+        below.append(near(wet_spec, f0 / 2))
+        at.append(near(wet_spec, f0))
+        dry_below.append(near(dry_spec, f0 / 2))
+        dry_at.append(near(dry_spec, f0))
     if len(at) > 5:
-        report["octaveDownDb"] = round(db(np.median(below) / (np.median(at) + 1e-20)), 1)
+        wet_ratio = db(np.median(below) / (np.median(at) + 1e-20))
+        # Autocorrelation sometimes locks onto the octave above the real note,
+        # and then the real note reads as "an octave below". The dry signal
+        # makes the same mistake, so only what the preset adds counts.
+        dry_ratio = db(np.median(dry_below) / (np.median(dry_at) + 1e-20))
+        report["octaveDownDb"] = round(wet_ratio, 1)
+        report["octaveDownAddedDb"] = round(wet_ratio - dry_ratio, 1)
 
     # What is left after the playing stops: delay and reverb tails.
     quiet_dry = env_d < peak * 10 ** (-50 / 20)
@@ -580,7 +590,7 @@ def performance_summary(report: dict) -> str:
             lines.append(f"No periodic level movement (spread {mod['depthDb']} dB, which is the dynamics)")
     if "octaveDownDb" in report:
         octave = report["octaveDownDb"]
-        if octave <= -30:
+        if octave <= -30 or report.get("octaveDownAddedDb", 99) < 10:
             lines.append("Nothing an octave below the played note - no octaver or sub synth")
         else:
             lines.append(f"An octave below the played note sits {octave:+.1f} dB relative to the note "

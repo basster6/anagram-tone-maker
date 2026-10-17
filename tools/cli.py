@@ -20,6 +20,10 @@ Command line front end for the Anagram tone maker skill.
     python3 tools/cli.py compare before.json after.json
     python3 tools/cli.py capture 20 [--save take.wav]
     python3 tools/cli.py reamp take.wav [--slot 18C] [--save wet.wav]
+    python3 tools/cli.py studio [--port 8765]
+    python3 tools/cli.py inbox
+    python3 tools/cli.py say "message for the player"
+    python3 tools/cli.py target "slap smile" 80=+6 700=-5 3000=+4 [--note why]
     python3 tools/cli.py analyze [dump.json]
     python3 tools/cli.py market [search-term]
     python3 tools/cli.py refresh-blocks
@@ -32,6 +36,11 @@ only a human can answer marked ASK. See `reference/onboarding.md`.
 feeds the effects chain, inputs 1-2 return it, input 3 is the instrument jack - and
 need `pip install numpy scipy sounddevice`. They play test tones through the
 outputs, so turn monitors down. See `reference/measuring-tone.md`.
+
+`studio` serves a local page where the player measures, records and listens, and
+talks to the assistant. Everything `measure`, `capture` and `reamp` produce lands in
+`studio/` and shows up on that page; `inbox` reads what the player wrote there,
+`say` answers, `target` overlays a curve to aim for.
 
 `info`, `presets`, `get`, `audition`, `save`, `delete` and `refresh-blocks` need the
 pedal plugged in and Darkglass Suite closed. The MIDI commands - `goto`, `mode`,
@@ -298,9 +307,13 @@ def _load_slot(slot: str | None) -> None:
 def cmd_measure(rest: list[str]) -> int:
     """What the current preset does to the signal, from test tones."""
     import measure
-    _load_slot(_option(rest, "--slot"))
+    import studio
+    slot = _option(rest, "--slot")
+    _load_slot(slot)
     report = measure.measure_all(quick="--quick" in rest)
     print(measure.summary(report))
+    ident = studio.save_measurement(report, _option(rest, "--label") or slot or "current", slot)
+    print(f"In the studio as {ident}")
     out = _option(rest, "--save")
     if out:
         Path(out).write_text(json.dumps(report, indent=1))
@@ -326,7 +339,10 @@ def cmd_capture(rest: list[str]) -> int:
     seconds = float(rest[0])
     print(f"Recording {seconds:g} s - play now.")
     dry, wet = measure.capture(seconds)
-    print(measure.performance_summary(measure.analyze_performance(dry, wet)))
+    analysis = measure.analyze_performance(dry, wet)
+    print(measure.performance_summary(analysis))
+    import studio
+    print(f"In the studio as {studio.save_take(analysis, _option(rest, '--label') or 'take', dry=dry, wet=wet)}")
     out = _option(rest, "--save")
     if out:
         _write_wav(out, dry)
@@ -348,13 +364,70 @@ def cmd_reamp(rest: list[str]) -> int:
         dry = dry.mean(axis=1)
     if dry.dtype.kind == "i":
         dry = dry / float(2 ** (8 * dry.dtype.itemsize - 1))
-    _load_slot(_option(rest, "--slot"))
+    slot = _option(rest, "--slot")
+    _load_slot(slot)
     wet = measure.reamp(dry.astype("float32"))
-    print(measure.performance_summary(measure.analyze_performance(dry, wet)))
+    analysis = measure.analyze_performance(dry, wet)
+    print(measure.performance_summary(analysis))
+    import studio
+    label = _option(rest, "--label") or f"{Path(rest[0]).stem} -> {slot or 'current'}"
+    source = None
+    try:
+        source = str(Path(rest[0]).resolve().relative_to(studio.ROOT.resolve()))
+    except ValueError:
+        pass
+    print(f"In the studio as {studio.save_take(analysis, label, wet=wet, slot=slot, source=source)}")
     out = _option(rest, "--save")
     if out:
         _write_wav(out, wet)
         print(f"Saved the wet take to {out} - listen to it, the numbers do not cover everything")
+    return 0
+
+
+def cmd_studio(rest: list[str]) -> int:
+    import studio
+    studio.serve(int(_option(rest, "--port") or 8765))
+    return 0
+
+
+def cmd_inbox() -> int:
+    """What the player wrote on the studio page since this was last run."""
+    import studio
+    fresh = studio.unread_for_claude()
+    if not fresh:
+        print("Nothing new from the player.")
+    for m in fresh:
+        print(f"[{time_label(m['ts'])}] {m['text']}")
+    return 0
+
+
+def time_label(ts: float) -> str:
+    import time
+    return time.strftime("%H:%M", time.localtime(ts))
+
+
+def cmd_say(text: str) -> int:
+    import studio
+    studio.post_message(text, "claude")
+    print("Posted to the studio.")
+    return 0
+
+
+def cmd_target(rest: list[str]) -> int:
+    """A curve to aim for, e.g. from research: target "slap" 80=+6 700=-5 3000=+4"""
+    import studio
+    note = _option(rest, "--note") or ""
+    args = [a for a in rest if a != "--note" and a != note]
+    name, pairs = args[0], args[1:]
+    points = {}
+    for pair in pairs:
+        hz, gain = pair.split("=")
+        hz = hz.lower().replace("hz", "")
+        points[float(hz[:-1]) * 1000 if hz.endswith("k") else float(hz)] = float(gain)
+    if len(points) < 2:
+        print("Give at least two points, like 80=+6 3000=+4.")
+        return 2
+    print(f"Target {studio.save_target(name, points, note)} is on the studio chart.")
     return 0
 
 
@@ -441,6 +514,10 @@ def main(argv: list[str]) -> int:
         if cmd == "compare":         return cmd_compare(rest[0], rest[1])
         if cmd == "capture":         return cmd_capture(rest)
         if cmd == "reamp":           return cmd_reamp(rest)
+        if cmd == "studio":          return cmd_studio(rest)
+        if cmd == "inbox":           return cmd_inbox()
+        if cmd == "say":             return cmd_say(" ".join(rest))
+        if cmd == "target":          return cmd_target(rest)
         if cmd == "analyze":         return cmd_analyze(rest[0] if rest else None)
         if cmd == "market":          return cmd_market(rest[0] if rest else None)
         if cmd == "refresh-blocks":  return cmd_refresh_blocks()

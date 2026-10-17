@@ -31,6 +31,7 @@ tools/
   validate.py                 preset validator
   setup_rig.py                infers your rig from the presets on the pedal
   measure.py                  frequency response, distortion, dynamics, effects
+  studio.py, studio.html      the local studio page and its server
   analyze.py                  profiles how you use the pedal
   midi.py                     preset/scene/mode switching over USB MIDI
   market.py                   fetches descriptions for installed blocks
@@ -79,6 +80,15 @@ That is the whole knowledge side — you get tone design and valid preset JSON, 
 without the device commands. Paste the JSON into an editor or audition it from a
 machine that has this folder.
 
+## The studio
+
+With the pedal plugged in, `python3 tools/cli.py studio` opens a local page at
+<http://localhost:8765>. Measure a preset and see its real frequency response,
+distortion and dynamics; record yourself and reamp that same take through other
+presets to compare them; and leave notes for the assistant, which reads them,
+changes the tone, measures again and answers on the page. Nothing leaves your
+machine.
+
 ## Using it
 
 Ask in plain language:
@@ -115,6 +125,7 @@ occupied slot unless you pass `--force`.
 | `cli.py audition <file>` | play it on the pedal, saving nothing |
 | `cli.py save <slot> <file>` | write into a slot, e.g. `save 17A tone.json` |
 | `cli.py setup` | first run: infer your rig and draft `rig.yaml` |
+| `cli.py studio` | local page to measure, record, listen and talk to the assistant |
 | `cli.py measure` | measure the current preset: EQ curve, distortion, dynamics, noise |
 | `cli.py compare a b` | what changed between two measurements |
 | `cli.py capture <s>` | record yourself playing, dry and wet |

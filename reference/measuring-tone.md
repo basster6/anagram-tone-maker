@@ -89,8 +89,11 @@ that feel alike and are fixed in different places:
   depth: tremolo, or anything modulating amplitude. The player's own dynamics and
   any gate or compressor are fitted out first, so the rhythm of the playing does
   not show up as a tremolo.
-- **Octave below** — how strong the signal an octave under the played note is.
-  Around -30 dB or lower means no octaver or sub synth.
+- **Octave below** — how strong the signal an octave under the played note is,
+  and how much of that the preset *added* over the dry take. Pitch tracking
+  sometimes mistakes a note for the octave above it, which makes the real note
+  read as "an octave below" in dry and wet alike; only an increase of 10 dB or
+  more over dry, to above -30 dB, means an octaver or sub synth.
 - **Tail** — how long sound continues after the last note. Above about 250 ms is
   a delay or reverb; below is the cab and gate letting go.
 
@@ -111,6 +114,15 @@ user's ears are the final word.
 
 Tell the user what the measurement showed in one or two sentences with numbers,
 and what you changed because of it.
+
+## The studio page
+
+`cli.py studio` puts all of this on a local page: the player runs measurements
+and recordings with buttons, sees every curve overlaid, plays dry and wet takes,
+and leaves messages. Results from either side land in `studio/` and appear on
+both. Read `inbox`, answer with `say`, overlay goals with `target`. A take
+recorded on the page is the best reference for the player's real level — use it
+to decide which test level describes them.
 
 ## Limits worth stating
 

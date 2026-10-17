@@ -132,6 +132,25 @@ python3 tools/cli.py capture 20 --save take.wav
 python3 tools/cli.py reamp take.wav --slot 18C
 ```
 
+### The studio page — working on a tone together
+
+`python3 tools/cli.py studio` (run it in the background) serves
+`http://localhost:8765`, where the player measures, records themselves, listens to
+dry and wet takes, sees every curve on one chart, and writes to you. You and the
+page share the `studio/` folder, so it works the same from any agent:
+
+- everything `measure`, `capture` and `reamp` produce shows up on the page;
+- `python3 tools/cli.py inbox` prints what the player wrote since you last looked
+  — check it between steps whenever the studio is running, and when they say
+  they wrote something;
+- `python3 tools/cli.py say "..."` answers on the page — say what you measured and
+  what you changed, with numbers;
+- `python3 tools/cli.py target "name" 80=+6 700=-5 3000=+4 --note "why"` draws the
+  curve the research says to aim for, dashed, over the measurements.
+
+Offer the studio when the pedal is attached and a tone is being refined; it is
+how the player sees what you see.
+
 **Measure every tone you build when the pedal is attached, and before you call
 it finished.** Parameter values routinely lie about the result: a cab IR removes
 the top end an EQ was boosting, a "clean" amp saturates at the level the player
