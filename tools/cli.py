@@ -16,6 +16,10 @@ Command line front end for the Anagram tone maker skill.
     python3 tools/cli.py tuner | tap
     python3 tools/cli.py delete 41A --yes
     python3 tools/cli.py setup [--force]
+    python3 tools/cli.py measure [--quick] [--slot 18C] [--save m.json]
+    python3 tools/cli.py compare before.json after.json
+    python3 tools/cli.py capture 20 [--save take.wav]
+    python3 tools/cli.py reamp take.wav [--slot 18C] [--save wet.wav]
     python3 tools/cli.py analyze [dump.json]
     python3 tools/cli.py market [search-term]
     python3 tools/cli.py refresh-blocks
@@ -23,6 +27,11 @@ Command line front end for the Anagram tone maker skill.
 `setup` is the first-run helper: it infers what it can about the rig from the
 presets already on the pedal and writes a draft `rig.yaml`, leaving the questions
 only a human can answer marked ASK. See `reference/onboarding.md`.
+
+`measure`, `capture` and `reamp` use the pedal as an audio interface - output 9
+feeds the effects chain, inputs 1-2 return it, input 3 is the instrument jack - and
+need `pip install numpy scipy sounddevice`. They play test tones through the
+outputs, so turn monitors down. See `reference/measuring-tone.md`.
 
 `info`, `presets`, `get`, `audition`, `save`, `delete` and `refresh-blocks` need the
 pedal plugged in and Darkglass Suite closed. The MIDI commands - `goto`, `mode`,
@@ -269,6 +278,86 @@ def cmd_setup(force: bool) -> int:
     return 0
 
 
+def _option(rest: list[str], name: str) -> str | None:
+    if name in rest:
+        i = rest.index(name)
+        if i + 1 < len(rest):
+            return rest[i + 1]
+        raise IndexError
+    return None
+
+
+def _load_slot(slot: str | None) -> None:
+    """Switch preset before measuring, and give the chain a moment to settle."""
+    if slot:
+        import time
+        cmd_goto(slot)
+        time.sleep(1.5)
+
+
+def cmd_measure(rest: list[str]) -> int:
+    """What the current preset does to the signal, from test tones."""
+    import measure
+    _load_slot(_option(rest, "--slot"))
+    report = measure.measure_all(quick="--quick" in rest)
+    print(measure.summary(report))
+    out = _option(rest, "--save")
+    if out:
+        Path(out).write_text(json.dumps(report, indent=1))
+        print(f"Saved to {out}")
+    return 0
+
+
+def cmd_compare(a: str, b: str) -> int:
+    import measure
+    print(measure.compare(json.loads(Path(a).read_text()), json.loads(Path(b).read_text())))
+    return 0
+
+
+def _write_wav(path: str, data) -> None:
+    import numpy as np
+    from scipy.io import wavfile
+    wavfile.write(path, 48000, np.asarray(data, dtype="float32"))
+
+
+def cmd_capture(rest: list[str]) -> int:
+    """Record the player on the dry input, with the current preset's output alongside."""
+    import measure
+    seconds = float(rest[0])
+    print(f"Recording {seconds:g} s - play now.")
+    dry, wet = measure.capture(seconds)
+    print(measure.performance_summary(measure.analyze_performance(dry, wet)))
+    out = _option(rest, "--save")
+    if out:
+        _write_wav(out, dry)
+        wet_path = str(Path(out).with_name(Path(out).stem + "-wet.wav"))
+        _write_wav(wet_path, wet)
+        print(f"Dry take saved to {out} (reamp it through any preset), wet to {wet_path}")
+    return 0
+
+
+def cmd_reamp(rest: list[str]) -> int:
+    """Run a recorded dry take through a preset, and say what the preset did to it."""
+    import measure
+    from scipy.io import wavfile
+    rate, dry = wavfile.read(rest[0])
+    if rate != measure.FS:
+        print(f"{rest[0]} is {rate} Hz; the pedal runs at {measure.FS}.")
+        return 2
+    if dry.ndim > 1:
+        dry = dry.mean(axis=1)
+    if dry.dtype.kind == "i":
+        dry = dry / float(2 ** (8 * dry.dtype.itemsize - 1))
+    _load_slot(_option(rest, "--slot"))
+    wet = measure.reamp(dry.astype("float32"))
+    print(measure.performance_summary(measure.analyze_performance(dry, wet)))
+    out = _option(rest, "--save")
+    if out:
+        _write_wav(out, wet)
+        print(f"Saved the wet take to {out} - listen to it, the numbers do not cover everything")
+    return 0
+
+
 def cmd_analyze(dump: str | None) -> int:
     """Profile what this player owns and how they actually use it."""
     from analyze import collect, to_markdown
@@ -348,6 +437,10 @@ def main(argv: list[str]) -> int:
         if cmd == "delete":
             return cmd_delete([a for a in rest if a != "--yes"][0], "--yes" in rest)
         if cmd == "setup":           return cmd_setup("--force" in rest)
+        if cmd == "measure":         return cmd_measure(rest)
+        if cmd == "compare":         return cmd_compare(rest[0], rest[1])
+        if cmd == "capture":         return cmd_capture(rest)
+        if cmd == "reamp":           return cmd_reamp(rest)
         if cmd == "analyze":         return cmd_analyze(rest[0] if rest else None)
         if cmd == "market":          return cmd_market(rest[0] if rest else None)
         if cmd == "refresh-blocks":  return cmd_refresh_blocks()

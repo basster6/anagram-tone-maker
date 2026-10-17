@@ -117,6 +117,27 @@ If web search is not available in the current environment, say so rather than
 quietly substituting your own assumptions, and keep the design to blocks whose
 parameters you have actually read.
 
+## Measure what you made
+
+The pedal is also a USB audio interface with a reamp input, so a tone can be
+**measured** rather than imagined: its real frequency response, harmonic
+distortion, compression and noise from test signals, and — from a recorded take
+of the player — what its modulation, octave and ambience effects do to real
+notes. `reference/measuring-tone.md` covers the commands and how to read them.
+
+```sh
+python3 tools/cli.py measure --save a.json      # about a minute, makes sound
+python3 tools/cli.py compare a.json b.json
+python3 tools/cli.py capture 20 --save take.wav
+python3 tools/cli.py reamp take.wav --slot 18C
+```
+
+**Measure every tone you build when the pedal is attached, and before you call
+it finished.** Parameter values routinely lie about the result: a cab IR removes
+the top end an EQ was boosting, a "clean" amp saturates at the level the player
+actually hits it. When the measurement and the research disagree, trust the
+measurement, find the cause, change one thing, and measure again.
+
 ## Read every parameter before you write a value
 
 Work out the chain, then **read the full parameter list of every block in it, and
@@ -296,8 +317,9 @@ takes any action name and payload.
    choices back to what the research said.
 5. Write the document, taking every range and default from the catalogue.
 6. Validate. Fix errors. Warnings are usually fine, but explain the ones you keep.
-7. Offer to audition it, and say plainly that nothing is saved until they save it
-   on the pedal.
+7. Audition it, **measure it**, and compare the result with what the research
+   said. Fix the gaps, one change at a time, measuring after each.
+8. Say plainly that nothing is saved until they save it on the pedal.
 
 Keep the explanation short and about the sound. The user wants a tone, not a
 tour of the JSON.

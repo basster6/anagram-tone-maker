@@ -18,6 +18,7 @@ reference/
   what-blocks-model.md        what each factory block emulates, plus every
                               cabinet, microphone and artist IR
   onboarding.md               the first-run interview, with its question set
+  measuring-tone.md           measuring a tone through the pedal's reamp input
   choosing-blocks.md          how to pick a chain for a given request
   blocks-user-catalog.md      blocks this device has on top (generated locally)
   blocks-user.json            the same, for tools
@@ -29,6 +30,7 @@ tools/
   cli.py                      command line
   validate.py                 preset validator
   setup_rig.py                infers your rig from the presets on the pedal
+  measure.py                  frequency response, distortion, dynamics, effects
   analyze.py                  profiles how you use the pedal
   midi.py                     preset/scene/mode switching over USB MIDI
   market.py                   fetches descriptions for installed blocks
@@ -38,7 +40,8 @@ tools/
 ## Setup
 
 ```sh
-pip install hidapi          # the only dependency, and only for talking to the pedal
+pip install hidapi                      # talking to the pedal
+pip install numpy scipy sounddevice     # optional: measuring tones through it
 ```
 
 Then just ask the assistant for a tone. On the first run it notices `rig.yaml` is
@@ -112,6 +115,10 @@ occupied slot unless you pass `--force`.
 | `cli.py audition <file>` | play it on the pedal, saving nothing |
 | `cli.py save <slot> <file>` | write into a slot, e.g. `save 17A tone.json` |
 | `cli.py setup` | first run: infer your rig and draft `rig.yaml` |
+| `cli.py measure` | measure the current preset: EQ curve, distortion, dynamics, noise |
+| `cli.py compare a b` | what changed between two measurements |
+| `cli.py capture <s>` | record yourself playing, dry and wet |
+| `cli.py reamp <wav>` | send a dry take through a preset and analyse the result |
 | `cli.py analyze` | profile what you own and how you use it |
 | `cli.py market` | what the shop says about your installed blocks |
 | `cli.py goto <slot>` | switch preset over MIDI |

@@ -3,3 +3,5 @@ reference/blocks-user.json
 reference/blocks-user-catalog.md
 reference/rig-profile.md
 reference/.market-cache.json
+*.wav
+measurements/
