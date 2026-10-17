@@ -72,6 +72,28 @@ class Rig:
         self.device = find_device() if device is None else device
         self.latency: int | None = None   # samples, host buffers and pedal together
 
+    def wait_for_quiet(self, threshold_dbfs: float = -45, hold: float = 1.0,
+                       timeout: float = 90, notify=None) -> None:
+        """Wait until nobody is playing. The instrument jack feeds the same chain
+        as the reamp input, so a note played during a measurement lands in it."""
+        started, quiet_since, warned = time.time(), None, False
+        while True:
+            rec = sd.rec(int(FS * 0.25), samplerate=FS, device=self.device,
+                         channels=3, blocking=True)
+            loud = db(np.max(np.abs(rec[:, DRY_IN - 1]))) > threshold_dbfs
+            now = time.time()
+            if not loud:
+                quiet_since = quiet_since or now
+                if now - quiet_since >= hold:
+                    return
+            else:
+                quiet_since = None
+                if not warned and notify:
+                    notify("Waiting for you to stop playing - the instrument goes into the same chain.")
+                    warned = True
+            if now - started > timeout:
+                raise RuntimeError("The instrument input never went quiet. Mute the bass and try again.")
+
     def calibrate(self) -> int:
         """Time the round trip with a short sweep. It is a few hundred milliseconds,
         mostly the computer's audio buffers, and every timed measurement depends
@@ -301,8 +323,9 @@ def measure_noise(rig: Rig) -> dict:
     }
 
 
-def measure_all(rig: Rig | None = None, quick: bool = False) -> dict:
+def measure_all(rig: Rig | None = None, quick: bool = False, notify=print) -> dict:
     rig = rig or Rig()
+    rig.wait_for_quiet(notify=notify)
     started = time.time()
     report = {
         "noise": measure_noise(rig),
@@ -424,6 +447,7 @@ def reamp(dry, rig: Rig | None = None, tail: float = 3.0):
     """Send a recorded dry take through the current preset. Returns the wet take,
     trimmed so it lines up with the dry one."""
     rig = rig or Rig()
+    rig.wait_for_quiet(notify=print)
     wet, _ = rig.run(dry, tail=tail, align=False)
     # Align on the cross-correlation peak, found on a decimated envelope so a
     # few minutes of audio stays cheap.

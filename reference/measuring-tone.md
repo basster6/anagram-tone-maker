@@ -124,6 +124,15 @@ both. Read `inbox`, answer with `say`, overlay goals with `target`. A take
 recorded on the page is the best reference for the player's real level — use it
 to decide which test level describes them.
 
+## Checking a guessed file path
+
+Cabinet and model files are device-side paths you cannot list. When you have to
+guess one from the naming pattern, measure it: a path that does not exist leaves
+the cab block passing the signal unfiltered, so the response stays flat or rises
+above 6 kHz instead of rolling off. Try each candidate with `audition` and a quick
+measurement, and keep the one whose top end actually falls — that is how
+`Eden 410 103 1 On_03-MP.dat` was found while `_01` and `_02` silently did nothing.
+
 ## Limits worth stating
 
 - The chain is measured as a whole. If the cause of a feature is unclear, bypass

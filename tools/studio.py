@@ -220,7 +220,8 @@ class Studio:
         def work():
             import measure
             self.goto(slot)
-            report = measure.measure_all(self._rig(), quick=quick)
+            report = measure.measure_all(self._rig(), quick=quick,
+                                         notify=lambda text: post_message(text, "system"))
             return save_measurement(report, label, slot, by="user")
         return self.start("measure", label, 14 if quick else 85, work)
 
