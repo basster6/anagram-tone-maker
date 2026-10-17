@@ -485,7 +485,7 @@ def analyze_performance(dry, wet) -> dict:
         # out there was made by distortion, and dividing by near-silence is noise.
         dry_levels = {f: band(pd, f) for f in BANDS_HZ}
         loudest = max(dry_levels.values())
-        diff = {f: band(pw, f) - dry_levels[f] for f in BANDS_HZ if dry_levels[f] > loudest - 45}
+        diff = {f: band(pw, f) - dry_levels[f] for f in BANDS_HZ if dry_levels[f] > loudest - 65}
         mids = [v for f, v in diff.items() if 200 <= f <= 2000]
         ref = sum(mids) / len(mids) if mids else 0.0
         report["playedGainDb"] = {str(f): (round(diff[f] - ref, 1) if f in diff else None) for f in BANDS_HZ}

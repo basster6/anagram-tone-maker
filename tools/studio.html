@@ -168,7 +168,7 @@ th { color: var(--muted); font-weight: 500; }
           <button class="primary" id="mquick">Quick · 12 s</button>
           <button id="mfull">Full · 80 s</button>
         </div>
-        <p class="hint">Plays test tones through the pedal — turn monitors down.</p>
+        <p class="hint">Plays test tones through the pedal — turn monitors down, and don't play while it runs: your instrument goes into the same chain.</p>
       </section>
 
       <section class="card">
@@ -370,7 +370,7 @@ function drawTakes() {
         <button class="ghost" style="margin-left:auto" data-del="${t.id}" title="Delete">✕</button></div>
       ${audio("dry", "dry")}${audio("wet", own ? "wet (as recorded)" : "wet")}
       <div class="lines">${lines.map(l => `<div>${esc(l)}</div>`).join("")}</div>
-      ${own ? `<div class="row" style="margin-top:6px"><input class="slot" placeholder="slot" data-slotfor="${t.id}"><button data-reamp="${t.id}">Reamp through</button></div>` : ""}
+      ${own ? `<div class="row" style="margin-top:6px"><input class="slot" placeholder="slot" data-slotfor="${t.id}"><button data-reamp="${t.id}">Reamp through</button><span class="hint">hands off the strings</span></div>` : ""}
     </div>`;
   }).join("");
   $("takes").querySelectorAll("[data-reamp]").forEach(b => b.onclick = async () => {
