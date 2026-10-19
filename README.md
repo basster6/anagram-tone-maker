@@ -89,6 +89,10 @@ presets to compare them; and leave notes for the assistant, which reads them,
 changes the tone, measures again and answers on the page. Nothing leaves your
 machine.
 
+Every reamp of a recording is grouped under it in **Compare takes**: one play
+button for all versions, switched with `1`–`9` while it plays, level-matched so
+the louder preset doesn't win by default. The page is in English and Korean.
+
 ## Using it
 
 Ask in plain language:

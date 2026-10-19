@@ -17,11 +17,13 @@
   --axis: #c3c2b7;
   --border: rgba(11,11,11,0.10);
   --accent: #2a78d6;
+  --accent-soft: #e8f1fc;
   --danger: #e34948;
   --good: #006300;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
   --bubble-user: #e8f1fc;
   --bubble-claude: #f1f0ec;
+  --wave: #c3c2b7;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -29,9 +31,9 @@
     --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
     --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-    --accent: #3987e5; --danger: #e66767; --good: #0ca30c;
+    --accent: #3987e5; --accent-soft: #1c3350; --danger: #e66767; --good: #0ca30c;
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-    --bubble-user: #1c3350; --bubble-claude: #2a2a28;
+    --bubble-user: #1c3350; --bubble-claude: #2a2a28; --wave: #4a4a46;
   }
 }
 :root[data-theme="dark"] {
@@ -39,118 +41,164 @@
   --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
   --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
-  --accent: #3987e5; --danger: #e66767; --good: #0ca30c;
+  --accent: #3987e5; --accent-soft: #1c3350; --danger: #e66767; --good: #0ca30c;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-  --bubble-user: #1c3350; --bubble-claude: #2a2a28;
+  --bubble-user: #1c3350; --bubble-claude: #2a2a28; --wave: #4a4a46;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--ink);
-  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
 .wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
 header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 header h1 { font-size: 18px; margin: 0; font-weight: 650; }
-.pill { font-size: 12px; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--border); color: var(--ink-2); }
+.pill { font-size: 12px; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--border); color: var(--ink-2); white-space: nowrap; }
 .pill.ok::before, .pill.bad::before { content: "●"; margin-right: 5px; }
 .pill.ok::before { color: var(--good); } .pill.bad::before { color: var(--danger); }
-.job { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: 13px; }
+.job { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: 13px; }
 .bar { flex: 1; height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; max-width: 260px; }
 .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s; }
-.grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
 .grid > *, .two > * { min-width: 0; }
+aside { position: sticky; top: 16px; }
 .scroll { overflow-x: auto; }
-@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+@media (max-width: 980px) { .grid { grid-template-columns: minmax(0, 1fr); } aside { position: static; } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; min-width: 0; }
 .card h2 { font-size: 13px; margin: 0 0 10px; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .card h2 .sub { font-weight: 400; color: var(--muted); }
+.card h2 .end { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 input, textarea, select { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--border);
-  border-radius: 6px; padding: 6px 8px; min-width: 0; }
+  border-radius: 6px; padding: 6px 8px; min-width: 0; max-width: 100%; }
+select { padding: 5px 6px; }
 input.slot { width: 68px; text-transform: uppercase; }
 input.secs { width: 60px; }
 button { font: inherit; font-size: 13px; border: 1px solid var(--border); background: var(--raised); color: var(--ink);
-  border-radius: 6px; padding: 6px 11px; cursor: pointer; }
+  border-radius: 6px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
 button.primary { background: var(--accent); color: #fff; border-color: transparent; }
 button.rec { background: var(--danger); color: #fff; border-color: transparent; }
 button:disabled { opacity: .45; cursor: default; }
 button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 2px 6px; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+button.ghost:hover { color: var(--ink); }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; flex: none; }
 .seg button { border: 0; border-radius: 0; padding: 4px 9px; font-size: 12px; }
 .seg button.on { background: var(--ink); color: var(--surface); }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--grid); margin: -4px 0 12px; }
+.tabs button { border: 0; background: none; border-radius: 0; padding: 6px 10px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 600; }
+.tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
 .chart { position: relative; width: 100%; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .tip { position: absolute; pointer-events: none; background: var(--raised); border: 1px solid var(--border);
   border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; z-index: 2; }
 .tip b { font-variant-numeric: tabular-nums; }
-.legend { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; max-height: 220px; overflow: auto; }
-.legend label { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 4px; border-radius: 5px; cursor: pointer; }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+.chips button { font-size: 12px; padding: 2px 9px; border-radius: 99px; }
+.chips button.on { background: var(--ink); color: var(--surface); border-color: transparent; }
+.legend { display: flex; flex-direction: column; gap: 1px; margin-top: 6px; max-height: 196px; overflow: auto; }
+.legend label { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 4px; border-radius: 5px; cursor: pointer; min-width: 0; }
 .legend label:hover { background: var(--page); }
+.legend .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .legend .sw { width: 18px; height: 0; border-top: 2px solid var(--muted); flex: none; }
-.legend .sw.dash { border-top-style: dashed; }
+.legend .sw.dash { border-top-style: dashed; } .legend .sw.dot { border-top-style: dotted; }
 .legend .meta { color: var(--muted); font-size: 12px; margin-left: auto; white-space: nowrap; }
-@media (max-width: 560px) { .legend .meta { display: none; } }
-td.lv { white-space: nowrap; }
+.legend .x { visibility: hidden; }
+.legend label:hover .x { visibility: visible; }
+@media (max-width: 560px) { .legend .meta { display: none; } .legend .x { visibility: visible; } }
 .legend input { margin: 0; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-@media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .two { grid-template-columns: minmax(0, 1fr); } }
 table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
 th, td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--grid); }
 th:first-child, td:first-child { text-align: left; color: var(--ink-2); }
 th { color: var(--muted); font-weight: 500; }
+td.lv { white-space: nowrap; }
 .facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; }
 .facts dt { color: var(--muted); } .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
 .meter { height: 10px; background: var(--grid); border-radius: 3px; position: relative; overflow: hidden; margin: 8px 0 2px; }
 .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--s3); width: 0; transition: width .08s; }
 .meter b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); left: 0; }
 .hint { color: var(--muted); font-size: 12px; }
-.take { border-top: 1px solid var(--grid); padding: 10px 0; }
-.take:first-child { border-top: 0; padding-top: 0; }
-.take .t { display: flex; align-items: baseline; gap: 8px; }
-.take .t strong { font-weight: 600; }
-.take audio { width: 100%; height: 32px; margin-top: 4px; }
-.take .lines { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
-.take .lines div { margin: 1px 0; }
-.chat { display: flex; flex-direction: column; gap: 6px; max-height: 360px; overflow: auto; padding: 2px; }
+.empty { color: var(--muted); font-size: 13px; padding: 18px 0; text-align: center; }
+
+/* compare takes */
+.player { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
+.play { width: 38px; height: 38px; border-radius: 50%; padding: 0; flex: none; display: grid; place-items: center;
+  background: var(--accent); color: #fff; border-color: transparent; font-size: 14px; }
+.wave { position: relative; flex: 1; height: 48px; cursor: pointer; min-width: 0; }
+.wave canvas { display: block; width: 100%; height: 100%; }
+.wave .head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); left: 0; pointer-events: none; }
+.clock { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; flex: none; min-width: 76px; text-align: right; }
+.variants { max-height: 320px; overflow: auto; border-top: 1px solid var(--grid); }
+.var { display: grid; grid-template-columns: 22px minmax(0, 1fr) repeat(4, 64px) 26px 26px; gap: 6px; align-items: center;
+  padding: 6px 4px; border-bottom: 1px solid var(--grid); cursor: pointer; font-size: 13px; }
+.var.head { cursor: default; font-size: 11px; color: var(--muted); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.var:not(.head):hover { background: var(--page); }
+.var.on { background: var(--accent-soft); }
+.var .k { font-size: 11px; color: var(--muted); text-align: center; border: 1px solid var(--border); border-radius: 4px; line-height: 18px; }
+.var.on .k { background: var(--accent); color: #fff; border-color: transparent; }
+.var .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.var .nm small { color: var(--muted); margin-left: 6px; }
+.var .n { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-2); }
+.var input { margin: 0 auto; display: block; }
+@media (max-width: 640px) {
+  .var { grid-template-columns: 22px minmax(0, 1fr) 26px 26px; }
+  .var .n { display: none; }
+  .var .sum { grid-column: 2 / -1; font-size: 11px; color: var(--muted); }
+}
+@media (min-width: 641px) { .var .sum { display: none; } }
+
+.chat { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow: auto; padding: 2px; }
 .msg { max-width: 88%; padding: 7px 10px; border-radius: 10px; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
 .msg.user { align-self: flex-end; background: var(--bubble-user); }
 .msg.claude { align-self: flex-start; background: var(--bubble-claude); }
-.msg.system { align-self: center; color: var(--muted); font-size: 12px; background: transparent; padding: 2px; }
+.msg.system { align-self: center; color: var(--muted); font-size: 12px; background: transparent; padding: 2px; text-align: center; }
 .msg .who { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
 .compose { display: flex; gap: 6px; margin-top: 8px; }
 .compose textarea { flex: 1; resize: vertical; min-height: 38px; }
-.empty { color: var(--muted); font-size: 13px; padding: 18px 0; text-align: center; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--border); border-radius: 3px; padding: 0 4px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Tone Studio</h1>
-    <span class="pill" id="dev">checking…</span>
+    <h1 data-t="title"></h1>
+    <span class="pill" id="dev"></span>
     <div class="job" id="job"></div>
+    <span class="seg" id="lang"><button data-v="en">EN</button><button data-v="ko">한국어</button></span>
+    <button class="ghost" id="theme" title=""></button>
   </header>
 
   <div class="grid">
     <main>
       <section class="card">
-        <h2>Frequency response <span class="sub">relative to the 200 Hz – 2 kHz average</span>
-          <span style="margin-left:auto" class="row">
-            <span class="seg" id="lvl"><button data-l="0" class="on">−24 dBFS in</button><button data-l="1">−12 dBFS in</button></span>
-            <button class="ghost" id="tbl">table</button>
+        <h2><span data-t="fr"></span> <span class="sub" data-t="frSub"></span>
+          <span class="end">
+            <span class="seg" id="lvl"><button data-l="0" class="on" data-t="lvl24"></button><button data-l="1" data-t="lvl12"></button></span>
+            <button class="ghost" id="tbl" data-t="table"></button>
           </span>
         </h2>
         <div class="chart" id="fr"></div>
         <div id="frtable" hidden></div>
+        <div class="chips" id="kinds"></div>
         <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="card">
+        <h2><span data-t="compare"></span> <span class="sub" data-t="compareSub"></span>
+          <span class="end"><select id="group" aria-label="take"></select>
+            <button class="ghost" id="delgroup" data-t-title="deleteGroup">✕</button></span>
+        </h2>
+        <div id="cmp"></div>
       </section>
 
       <section class="two">
         <div class="card">
-          <h2>Dynamics <span class="sub">out vs in, dBFS</span> <span class="sub" id="dyn-name" style="margin-left:auto"></span></h2>
+          <h2><span data-t="dyn"></span> <span class="sub" data-t="dynSub"></span>
+            <span class="end"><select id="focus" aria-label="measurement"></select></span></h2>
           <div class="chart" id="dyn"></div>
           <dl class="facts" id="dyn-facts"></dl>
         </div>
         <div class="card">
-          <h2>Distortion <span class="sub">THD %, with H2 / H3 dB</span></h2>
+          <h2><span data-t="dist"></span> <span class="sub" data-t="distSub"></span></h2>
           <div id="dist"></div>
           <p class="hint" id="dist-note"></p>
         </div>
@@ -159,40 +207,35 @@ th { color: var(--muted); font-weight: 500; }
 
     <aside>
       <section class="card">
-        <h2>Measure</h2>
-        <div class="row">
-          <input class="slot" id="slot" placeholder="slot" title="Load this slot first, e.g. 18C. Empty = whatever is playing">
-          <input id="mlabel" placeholder="label" style="flex:1">
+        <div class="tabs" id="ptabs"><button data-p="measure" class="on" data-t="measure"></button><button data-p="record" data-t="record"></button></div>
+        <div data-pane="measure">
+          <div class="row">
+            <input class="slot" id="slot" data-t-ph="slot" data-t-title="slotTip">
+            <input id="mlabel" data-t-ph="label" style="flex:1">
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="primary" id="mquick" data-t="quick"></button>
+            <button id="mfull" data-t="full"></button>
+          </div>
+          <p class="hint" data-t="measureHint"></p>
         </div>
-        <div class="row" style="margin-top:8px">
-          <button class="primary" id="mquick">Quick · 12 s</button>
-          <button id="mfull">Full · 80 s</button>
+        <div data-pane="record" hidden>
+          <div class="row">
+            <input id="tlabel" data-t-ph="whatYouPlay" style="flex:1">
+            <input class="secs" id="secs" type="number" min="2" max="120" value="20"> <span data-t="sec"></span>
+            <button class="rec" id="recbtn" data-t="recBtn"></button>
+          </div>
+          <div class="meter" aria-hidden="true"><i id="mrms"></i><b id="mpeak"></b></div>
+          <div class="hint" id="meterval"></div>
         </div>
-        <p class="hint">Plays test tones through the pedal — turn monitors down, and don't play while it runs: your instrument goes into the same chain.</p>
       </section>
 
       <section class="card">
-        <h2>Record</h2>
-        <div class="row">
-          <input id="tlabel" placeholder="what you play" style="flex:1">
-          <input class="secs" id="secs" type="number" min="2" max="120" value="20"> s
-          <button class="rec" id="recbtn">Record</button>
-        </div>
-        <div class="meter" aria-hidden="true"><i id="mrms"></i><b id="mpeak"></b></div>
-        <div class="hint" id="meterval">Records the dry instrument input and the preset's output together.</div>
-      </section>
-
-      <section class="card">
-        <h2>Takes</h2>
-        <div id="takes"></div>
-      </section>
-
-      <section class="card">
-        <h2>Talk to Claude <span class="sub">it reads this when you ask it to check the studio</span></h2>
+        <h2><span data-t="talk"></span> <span class="sub" data-t="talkSub"></span></h2>
         <div class="chat" id="chat"></div>
         <div class="compose">
-          <textarea id="say" placeholder="e.g. the slap is too dark, I want more click"></textarea>
-          <button class="primary" id="send">Send</button>
+          <textarea id="say" data-t-ph="sayPh"></textarea>
+          <button class="primary" id="send" data-t="send"></button>
         </div>
       </section>
     </aside>
@@ -200,19 +243,119 @@ th { color: var(--muted); font-weight: 500; }
 </div>
 
 <script>
+// ---------- language ----------
+const I18N = {
+  en: {
+    title: "Tone Studio", connected: "Anagram connected", notFound: "Anagram not found", checking: "checking…", stopped: "studio server stopped",
+    fr: "Frequency response", frSub: "relative to the 200 Hz – 2 kHz average", lvl24: "−24 dBFS in", lvl12: "−12 dBFS in",
+    table: "table", chartOnly: "chart only", frEmpty: "Measure something, or tick a curve below.",
+    all: "All", measured: "Measured", played: "Played", targets: "Targets", target: "target", playedTake: "played take", measuredK: "measured",
+    compare: "Compare takes", compareSub: "one performance, every preset — switch while it plays",
+    deleteGroup: "Delete this recording and every reamp of it",
+    confirmGroup: n => `Delete this recording and its ${n} reamp(s)?`, confirmDel: "Delete this?",
+    noTakes: "Record yourself playing (Record tab, right). Then reamp that take through other presets and switch between them here.",
+    dry: "Dry", asRecorded: "As recorded", colName: "Version", colSquash: "Squash", colTail: "Tail", colMod: "Tremolo", colOct: "Oct. −1",
+    onChart: "Show its played curve on the chart", keys: "<kbd>Space</kbd> play · <kbd>1</kbd>–<kbd>9</kbd> switch",
+    match: "Level-matched", matchTip: "Plays every version at the same loudness so the louder one doesn't win by default",
+    reampThrough: "Reamp through", handsOff: "hands off the strings", slot: "slot", label: "label",
+    slotTip: "Load this slot first, e.g. 18C. Empty = whatever is playing",
+    loading: "loading audio…", playingAt: (p, r) => `Playing peaks ${p} dBFS, average ${r}`,
+    dyn: "Dynamics", dynSub: "out vs in, dBFS", runFull: "Run a full measurement.",
+    saturation: "Saturation", compression: "Compression", reverb: "Reverb", noise: "Noise",
+    satV: d => `${d} dB lost instantly on a 20 dB jump`, compV: d => `${d} dB more over time`,
+    attack: (a, r) => ` · attack ${a} ms · release ${r} ms`, noiseV: d => `${d} dBFS at the output`,
+    unity: "dashed line = unity, so the curve bending under it is compression or clipping",
+    dist: "Distortion", distSub: "THD %, with H2 / H3 dB", inDbfs: "in dBFS",
+    lean: (k, b) => `Driven hard it leans ${k} (${b} dB). Measured at the output, so EQ after the drive tilts these.`,
+    even: "even-order — warm, tube-like", odd: "odd-order — hard, fuzz/clip-like", neither: "neither way",
+    measure: "Measure", quick: "Quick · 12 s", full: "Full · 80 s",
+    measureHint: "Plays test tones through the pedal — turn monitors down, and don't play while it runs: your instrument goes into the same chain.",
+    record: "Record", whatYouPlay: "what you play", sec: "s", recBtn: "Record",
+    recHint: "Records the dry instrument input and the preset's output together.",
+    meter: (p, r) => `Input peak ${p} dBFS · average ${r} dBFS`, clip: " — close to clipping",
+    talk: "Talk to Claude", talkSub: "it reads this when you ask it to check the studio",
+    sayPh: "e.g. the slap is too dark, I want more click", send: "Send",
+    chatEmpty: "Ask for a change here, then tell Claude Code to check the studio.", you: "you",
+    jobRec: l => `Recording “${l}” — play now`, jobMeasure: l => `Measuring “${l}”`, jobReamp: l => `Reamping “${l}”`, done: l => `Done: ${l}`,
+    now: "just now", min: n => `${n} min ago`, hr: n => `${n} h ago`, day: n => `${n} d ago`,
+    themeAuto: "Theme: follows the system", themeLight: "Theme: light", themeDark: "Theme: dark",
+    yes: "yes", none: "–", lost: "lost", added: "added",
+  },
+  ko: {
+    title: "톤 스튜디오", connected: "Anagram 연결됨", notFound: "Anagram 없음", checking: "확인 중…", stopped: "스튜디오 서버가 꺼졌습니다",
+    fr: "주파수 응답", frSub: "200 Hz – 2 kHz 평균 기준", lvl24: "입력 −24 dBFS", lvl12: "입력 −12 dBFS",
+    table: "표", chartOnly: "차트만", frEmpty: "측정하거나, 아래에서 곡선을 체크하세요.",
+    all: "전체", measured: "측정", played: "연주", targets: "목표", target: "목표", playedTake: "연주 테이크", measuredK: "측정",
+    compare: "테이크 비교", compareSub: "같은 연주를 프리셋마다 — 재생 중에 바꿔 들어보세요",
+    deleteGroup: "이 녹음과 모든 리앰프 삭제",
+    confirmGroup: n => `이 녹음과 리앰프 ${n}개를 삭제할까요?`, confirmDel: "삭제할까요?",
+    noTakes: "먼저 연주를 녹음하세요 (오른쪽 녹음 탭). 그 테이크를 다른 프리셋으로 리앰프하면 여기서 바꿔가며 들을 수 있습니다.",
+    dry: "드라이", asRecorded: "녹음 당시", colName: "버전", colSquash: "어택 손실", colTail: "잔향", colMod: "트레몰로", colOct: "옥타브↓",
+    onChart: "연주 곡선을 차트에 표시", keys: "<kbd>Space</kbd> 재생 · <kbd>1</kbd>–<kbd>9</kbd> 전환",
+    match: "음량 맞춤", matchTip: "모든 버전을 같은 음량으로 재생해서, 큰 소리가 더 좋게 들리는 착각을 막습니다",
+    reampThrough: "리앰프", handsOff: "줄에서 손 떼고", slot: "슬롯", label: "이름",
+    slotTip: "이 슬롯을 먼저 불러옵니다 (예: 18C). 비우면 현재 프리셋",
+    loading: "오디오 불러오는 중…", playingAt: (p, r) => `연주 피크 ${p} dBFS, 평균 ${r}`,
+    dyn: "다이내믹스", dynSub: "입력 대비 출력, dBFS", runFull: "전체 측정을 실행하세요.",
+    saturation: "새추레이션", compression: "컴프레션", reverb: "리버브", noise: "노이즈",
+    satV: d => `20 dB 점프에서 즉시 ${d} dB 손실`, compV: d => `시간에 걸쳐 ${d} dB 추가 압축`,
+    attack: (a, r) => ` · 어택 ${a} ms · 릴리즈 ${r} ms`, noiseV: d => `출력 ${d} dBFS`,
+    unity: "점선 = 유니티. 곡선이 그 아래로 휘면 컴프레션이나 클리핑입니다",
+    dist: "디스토션", distSub: "THD %, H2 / H3 dB", inDbfs: "입력 dBFS",
+    lean: (k, b) => `세게 걸면 ${k} 쪽입니다 (${b} dB). 출력에서 잰 값이라 드라이브 뒤의 EQ가 영향을 줍니다.`,
+    even: "짝수 배음 — 따뜻하고 진공관 같은", odd: "홀수 배음 — 단단하고 퍼즈/클리핑 같은", neither: "어느 쪽도 아닌",
+    measure: "측정", quick: "빠르게 · 12초", full: "전체 · 80초",
+    measureHint: "페달로 테스트 톤을 재생합니다. 모니터 볼륨을 줄이고, 측정 중에는 연주하지 마세요 — 악기도 같은 체인에 들어갑니다.",
+    record: "녹음", whatYouPlay: "무엇을 연주하나요", sec: "초", recBtn: "녹음",
+    recHint: "악기 드라이 입력과 프리셋 출력을 함께 녹음합니다.",
+    meter: (p, r) => `입력 피크 ${p} dBFS · 평균 ${r} dBFS`, clip: " — 클리핑 직전",
+    talk: "Claude와 대화", talkSub: "스튜디오를 확인해 달라고 하면 읽습니다",
+    sayPh: "예: 슬랩이 너무 어두워요, 클릭이 더 있었으면", send: "보내기",
+    chatEmpty: "여기에 바꾸고 싶은 걸 적고, Claude Code에 스튜디오를 확인해 달라고 하세요.", you: "나",
+    jobRec: l => `“${l}” 녹음 중 — 지금 연주하세요`, jobMeasure: l => `“${l}” 측정 중`, jobReamp: l => `“${l}” 리앰프 중`, done: l => `완료: ${l}`,
+    now: "방금", min: n => `${n}분 전`, hr: n => `${n}시간 전`, day: n => `${n}일 전`,
+    themeAuto: "테마: 시스템 따름", themeLight: "테마: 라이트", themeDark: "테마: 다크",
+    yes: "있음", none: "–", lost: "손실", added: "추가",
+  },
+};
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+let lang = store.get("studio.lang") || ((navigator.language || "en").startsWith("ko") ? "ko" : "en");
+const t = (k, ...a) => { const v = (I18N[lang] || I18N.en)[k] ?? I18N.en[k] ?? k; return typeof v === "function" ? v(...a) : v; };
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll("[data-t-ph]").forEach(el => el.placeholder = t(el.dataset.tPh));
+  document.querySelectorAll("[data-t-title]").forEach(el => el.title = t(el.dataset.tTitle));
+  $("lang").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === lang));
+  $("tbl").textContent = $("frtable").hidden ? t("table") : t("chartOnly");
+  applyTheme();
+}
+
+// ---------- theme ----------
+let theme = store.get("studio.theme") || "auto";
+function applyTheme() {
+  if (theme === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = theme;
+  $("theme").textContent = theme === "auto" ? "◐" : theme === "light" ? "☀" : "☾";
+  $("theme").title = t(theme === "auto" ? "themeAuto" : theme === "light" ? "themeLight" : "themeDark");
+}
+
+// ---------- state ----------
 const BANDS = [30,40,60,80,100,125,160,200,250,315,400,500,630,800,1000,1250,1600,2000,2500,3150,4000,5000,6300,8000,10000,12500,16000];
 const COLORS = ["--s1","--s2","--s3","--s4"];
 const MAX_SHOWN = 4;
 let S = { measurements: [], takes: [], targets: [], messages: [] };
 let shown = [];            // ids of series on the chart, in the order they were picked
 const colorOf = {};        // id -> color slot; follows the series, not its rank
-let level = 0, focusId = null, lastKeys = {};
+let level = 0, focusId = null, lastKeys = {}, kindFilter = "all", groupId = null;
 
 const $ = (id) => document.getElementById(id);
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const fmtHz = (f) => f >= 1000 ? (f / 1000) + "k" : String(f);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const ago = (t) => { const s = Date.now() / 1000 - t; return s < 90 ? "just now" : s < 5400 ? Math.round(s / 60) + " min ago" : new Date(t * 1000).toLocaleString(); };
+const ago = (ts) => { const s = Date.now() / 1000 - ts; return s < 90 ? t("now") : s < 5400 ? t("min", Math.round(s / 60)) : s < 129600 ? t("hr", Math.round(s / 3600)) : t("day", Math.round(s / 86400)); };
+const sign = (v, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d);
+const typing = () => /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
 
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -220,6 +363,23 @@ async function api(path, body) {
 }
 
 function ref(g) { const k = BANDS.filter(f => f >= 200 && f <= 2000 && g[f] != null); return k.reduce((a, f) => a + g[f], 0) / k.length; }
+
+// The words every visible name shares at the start, so chart labels show what differs.
+function commonPrefix(names) {
+  if (names.length < 2) return "";
+  let p = names[0];
+  for (const n of names) while (!n.startsWith(p)) p = p.slice(0, -1);
+  const cut = Math.max(p.lastIndexOf(" · "), p.lastIndexOf(" → "), p.lastIndexOf(" "));
+  return cut > 0 ? p.slice(0, cut + (p[cut + 1] === "·" || p[cut + 1] === "→" ? 3 : 1)) : "";
+}
+
+// ---------- takes: recordings and their reamps ----------
+const ownRecording = (tk) => tk.files.dry && tk.files.dry.startsWith("takes/" + tk.id);
+function groups() {
+  const roots = S.takes.filter(ownRecording);
+  return roots.map(r => ({ root: r, reamps: S.takes.filter(x => x !== r && x.files.dry === r.files.dry) })).reverse();
+}
+const shortName = (root, tk) => tk.label.startsWith(root.label + " → ") ? tk.label.slice(root.label.length + 3) : tk.label;
 
 // Every curve the chart can show, as {id, name, kind, by, values{band:dB}}
 function series() {
@@ -230,14 +390,14 @@ function series() {
     const v = {}; BANDS.forEach(f => v[f] = r.gainDb[f] - r0);
     out.push({ id: m.id, name: m.label, kind: "measured", by: m.by, t: m.created, values: v, slot: m.slot });
   }
-  for (const t of S.takes) {
-    const g = t.analysis && t.analysis.playedGainDb; if (!g) continue;
+  for (const tk of S.takes) {
+    const g = tk.analysis && tk.analysis.playedGainDb; if (!g) continue;
     const v = {}; BANDS.forEach(f => v[f] = g[f]);
-    out.push({ id: t.id, name: t.label, kind: "played", by: t.by, t: t.created, values: v, slot: t.slot });
+    out.push({ id: tk.id, name: tk.label, kind: "played", by: tk.by, t: tk.created, values: v, slot: tk.slot });
   }
-  for (const t of S.targets) {
-    const r0 = ref(t.gainDb); const v = {}; BANDS.forEach(f => v[f] = t.gainDb[f] - r0);
-    out.push({ id: t.id, name: t.name, kind: "target", note: t.note, t: t.created, values: v });
+  for (const tg of S.targets) {
+    const r0 = ref(tg.gainDb); const v = {}; BANDS.forEach(f => v[f] = tg.gainDb[f] - r0);
+    out.push({ id: tg.id, name: tg.name, kind: "target", note: tg.note, t: tg.created, values: v });
   }
   return out;
 }
@@ -248,37 +408,46 @@ function pickColor(id) {
   colorOf[id] = COLORS.find(c => !used.has(c)) || COLORS[0];
   return colorOf[id];
 }
+const strokeOf = (s) => s.kind === "target" ? css("--ink-2") : css(pickColor(s.id));
+const dashOf = (s) => s.kind === "target" ? "6 5" : s.kind === "played" ? "2 4" : "";
+
+function toggleShown(id, on) {
+  if (on) { if (!shown.includes(id)) shown.push(id); if (shown.length > MAX_SHOWN) shown.shift(); }
+  else shown = shown.filter(x => x !== id);
+  if (on && S.measurements.some(m => m.id === id && m.report.dynamics)) focusId = id;
+}
 
 // ---------- frequency response chart ----------
 function drawFR() {
-  const box = $("fr"); const W = Math.max(box.clientWidth, 320), H = Math.round(Math.min(380, W * 0.5));
-  const m = { l: 40, r: 12, t: 10, b: 26 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const box = $("fr"); const W = Math.max(box.clientWidth, 280), H = Math.round(Math.max(220, Math.min(380, W * 0.5)));
+  const m = { l: 34, r: 8, t: 10, b: 26 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
   const lo = Math.log10(25), hi = Math.log10(18000), y0 = -36, y1 = 18;
   const x = f => m.l + (Math.log10(f) - lo) / (hi - lo) * iw;
   const y = d => m.t + (y1 - Math.max(y0, Math.min(y1, d))) / (y1 - y0) * ih;
   const all = series(); const vis = shown.map(id => all.find(s => s.id === id)).filter(Boolean);
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Frequency response chart">`;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("fr"))}">`;
   const step = ih < 220 ? 12 : 6;
   for (let d = y0; d <= y1; d += step) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(d)}" y2="${y(d)}" stroke="${css(d === 0 ? "--axis" : "--grid")}" stroke-width="1"/><text x="${m.l - 6}" y="${y(d) + 4}" text-anchor="end" font-size="11" fill="${css("--muted")}">${d > 0 ? "+" + d : d}</text>`;
-  for (const f of [30, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) g += `<line x1="${x(f)}" x2="${x(f)}" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--grid")}"/><text x="${x(f)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="${css("--muted")}">${fmtHz(f)}</text>`;
+  const ticks = W < 480 ? [50, 100, 500, 1000, 5000, 10000] : [30, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+  for (const f of ticks) g += `<line x1="${x(f)}" x2="${x(f)}" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--grid")}"/><text x="${x(f)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="${css("--muted")}">${fmtHz(f)}</text>`;
   g += `<text x="${W - m.r}" y="${H - 8}" text-anchor="end" font-size="11" fill="${css("--muted")}">Hz</text>`;
   for (const s of vis) {
     const pts = BANDS.filter(f => s.values[f] != null).map(f => `${x(f).toFixed(1)},${y(s.values[f]).toFixed(1)}`).join(" ");
-    const col = s.kind === "target" ? css("--ink-2") : css(pickColor(s.id));
-    g += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" ${s.kind === "target" ? 'stroke-dasharray="6 5"' : s.kind === "played" ? 'stroke-dasharray="2 4"' : ""}/>`;
+    g += `<polyline points="${pts}" fill="none" stroke="${strokeOf(s)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" ${dashOf(s) ? `stroke-dasharray="${dashOf(s)}"` : ""}/>`;
   }
-  // direct labels at the right end when few series
-  if (vis.length && vis.length <= 4) {
-    const placed = [];
+  // direct labels: only the part of each name that differs, placed in the open mids
+  if (vis.length && vis.length <= 4 && W >= 420) {
+    const pre = commonPrefix(vis.map(s => s.name)), placed = [];
     for (const s of vis) {
-      const f = [...BANDS].reverse().find(b => s.values[b] != null && b <= 12500); if (!f) continue;
-      let yy = y(s.values[f]); while (placed.some(p => Math.abs(p - yy) < 13)) yy += 13; placed.push(yy);
-      g += `<text x="${x(f) + 4}" y="${yy - 8}" font-size="11" fill="${css("--ink-2")}" text-anchor="end" stroke="${css("--surface")}" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(s.name).slice(0, 22)}</text>`;
+      const f = 1250; if (s.values[f] == null) continue;
+      let yy = y(s.values[f]) - 8; while (placed.some(p => Math.abs(p - yy) < 14)) yy += 14; placed.push(yy);
+      const text = s.name.slice(pre.length) || s.name;
+      g += `<text x="${x(f)}" y="${yy}" font-size="11" fill="${css("--ink-2")}" text-anchor="middle" stroke="${css("--surface")}" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(text.length > 26 ? text.slice(0, 25) + "…" : text)}</text>`;
     }
   }
   g += `<line id="xh" y1="${m.t}" y2="${m.t + ih}" stroke="${css("--ink-2")}" stroke-width="1" visibility="hidden"/>`;
   g += `<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" id="hit"/></svg>`;
-  if (!vis.length) g += `<div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">Measure something, or tick a curve below.</div>`;
+  if (!vis.length) g += `<div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">${esc(t("frEmpty"))}</div>`;
   box.innerHTML = g + `<div class="tip" id="tip" hidden></div>`;
   const hit = box.querySelector("#hit"), xh = box.querySelector("#xh"), tip = box.querySelector("#tip");
   hit.addEventListener("pointermove", e => {
@@ -287,33 +456,194 @@ function drawFR() {
     const f = BANDS.reduce((a, b) => Math.abs(x(b) - sx) < Math.abs(x(a) - sx) ? b : a);
     xh.setAttribute("x1", x(f)); xh.setAttribute("x2", x(f)); xh.setAttribute("visibility", "visible");
     tip.innerHTML = `<div style="color:${css("--muted")};margin-bottom:3px">${fmtHz(f)} Hz</div>` + vis.map(s =>
-      `<div><span style="display:inline-block;width:12px;border-top:2px ${s.kind === "measured" ? "solid" : "dashed"} ${s.kind === "target" ? css("--ink-2") : css(pickColor(s.id))};vertical-align:middle;margin-right:6px"></span>${esc(s.name).slice(0, 24)} <b>${s.values[f] == null ? "–" : (s.values[f] > 0 ? "+" : "") + s.values[f].toFixed(1) + " dB"}</b></div>`).join("");
+      `<div><span style="display:inline-block;width:12px;border-top:2px ${s.kind === "measured" ? "solid" : s.kind === "played" ? "dotted" : "dashed"} ${strokeOf(s)};vertical-align:middle;margin-right:6px"></span>${esc(s.name).slice(0, 34)} <b>${s.values[f] == null ? "–" : sign(s.values[f]) + " dB"}</b></div>`).join("");
     tip.hidden = false;
-    const px = x(f) * rect.width / W; tip.style.left = Math.min(px + 12, rect.width - tip.offsetWidth - 4) + "px"; tip.style.top = "8px";
+    const px = x(f) * rect.width / W;
+    tip.style.left = Math.max(0, Math.min(px + 12, rect.width - tip.offsetWidth - 4)) + "px"; tip.style.top = "8px";
   });
   hit.addEventListener("pointerleave", () => { xh.setAttribute("visibility", "hidden"); tip.hidden = true; });
-  // table view
-  $("frtable").innerHTML = vis.length ? `<div style="overflow-x:auto"><table><tr><th>Hz</th>${vis.map(s => `<th>${esc(s.name).slice(0, 14)}</th>`).join("")}</tr>${BANDS.map(f => `<tr><td>${fmtHz(f)}</td>${vis.map(s => `<td>${s.values[f] == null ? "–" : s.values[f].toFixed(1)}</td>`).join("")}</tr>`).join("")}</table></div>` : "";
+  $("frtable").innerHTML = vis.length ? `<div class="scroll"><table><tr><th>Hz</th>${vis.map(s => `<th>${esc(s.name).slice(0, 18)}</th>`).join("")}</tr>${BANDS.map(f => `<tr><td>${fmtHz(f)}</td>${vis.map(s => `<td>${s.values[f] == null ? "–" : s.values[f].toFixed(1)}</td>`).join("")}</tr>`).join("")}</table></div>` : "";
 }
 
 function drawLegend() {
   const all = series().sort((a, b) => b.t - a.t);
-  if (!all.length) { $("legend").innerHTML = ""; return; }
-  $("legend").innerHTML = all.map(s => {
+  const counts = { all: all.length, measured: 0, played: 0, target: 0 }; all.forEach(s => counts[s.kind]++);
+  $("kinds").innerHTML = all.length ? [["all", "all"], ["measured", "measured"], ["played", "played"], ["target", "targets"]]
+    .filter(([k]) => k === "all" || counts[k]).map(([k, label]) => `<button data-k="${k}" class="${kindFilter === k ? "on" : ""}">${esc(t(label))} ${counts[k]}</button>`).join("") : "";
+  $("kinds").querySelectorAll("button").forEach(b => b.onclick = () => { kindFilter = b.dataset.k; drawLegend(); });
+  const list = all.filter(s => kindFilter === "all" || s.kind === kindFilter);
+  $("legend").innerHTML = list.map(s => {
     const on = shown.includes(s.id);
-    const col = on ? (s.kind === "target" ? css("--ink-2") : css(pickColor(s.id))) : css("--axis");
-    const kind = s.kind === "target" ? "target" : s.kind === "played" ? "played take" : "measured";
-    return `<label title="${esc(s.note || "")}"><input type="checkbox" data-id="${s.id}" ${on ? "checked" : ""}>
-      <span class="sw ${s.kind !== "measured" ? "dash" : ""}" style="border-top-color:${col}"></span>
-      <span>${esc(s.name)}</span><span class="meta">${kind}${s.by ? " · " + s.by : ""} · ${ago(s.t)}</span></label>`;
+    const col = on ? strokeOf(s) : css("--axis");
+    const kind = s.kind === "target" ? t("target") : s.kind === "played" ? t("playedTake") : t("measuredK");
+    const del = s.kind !== "played" ? `<button class="ghost x" data-del="${s.id}" data-kind="${s.kind === "target" ? "targets" : "measurements"}" title="✕">✕</button>` : "";
+    return `<label title="${esc(s.note || s.name)}"><input type="checkbox" data-id="${s.id}" ${on ? "checked" : ""}>
+      <span class="sw ${s.kind === "target" ? "dash" : s.kind === "played" ? "dot" : ""}" style="border-top-color:${col}"></span>
+      <span class="name">${esc(s.name)}</span><span class="meta">${kind}${s.by ? " · " + s.by : ""} · ${ago(s.t)}</span>${del}</label>`;
   }).join("");
-  $("legend").querySelectorAll("input").forEach(cb => cb.onchange = () => {
-    const id = cb.dataset.id;
-    if (cb.checked) { shown.push(id); if (shown.length > MAX_SHOWN) shown.shift(); }
-    else shown = shown.filter(x => x !== id);
-    if (S.measurements.some(m => m.id === id) && cb.checked) focusId = id;
-    render(true);
+  $("legend").querySelectorAll("input").forEach(cb => cb.onchange = () => { toggleShown(cb.dataset.id, cb.checked); render(true); });
+  $("legend").querySelectorAll("[data-del]").forEach(b => b.onclick = async (e) => {
+    e.preventDefault(); if (!confirm(t("confirmDel"))) return;
+    await api("/api/delete", { kind: b.dataset.kind, id: b.dataset.del }); shown = shown.filter(x => x !== b.dataset.del); poll();
   });
+}
+
+// ---------- compare takes: one transport over every version of a performance ----------
+const P = { ctx: null, key: null, bufs: {}, peaks: {}, gain: {}, srcs: [], nodes: {}, active: 0, offset: 0, startAt: 0, playing: false,
+  match: store.get("studio.match") !== "0", raf: 0, dur: 0, loading: false };
+
+function versions(gr) {
+  const r = gr.root, out = [{ id: r.id + ":dry", file: r.files.dry, name: t("dry"), a: null, take: null }];
+  if (r.files.wet) out.push({ id: r.id + ":wet", file: r.files.wet, name: t("asRecorded"), a: r.analysis, take: r });
+  for (const x of gr.reamps) if (x.files.wet) out.push({ id: x.id, file: x.files.wet, name: shortName(r, x), sub: x.slot, a: x.analysis, take: x });
+  return out;
+}
+
+// The studio writes its own WAVs (float32, or 16-bit from elsewhere), so read them
+// directly: decodeAudioData stalls in some browsers and resamples in others.
+function parseWav(ab) {
+  const v = new DataView(ab); let p = 12, fmt = null;
+  while (p + 8 <= v.byteLength) {
+    const id = String.fromCharCode(v.getUint8(p), v.getUint8(p + 1), v.getUint8(p + 2), v.getUint8(p + 3)), size = v.getUint32(p + 4, true), body = p + 8;
+    if (id === "fmt ") fmt = { code: v.getUint16(body, true), ch: v.getUint16(body + 2, true), rate: v.getUint32(body + 4, true), bits: v.getUint16(body + 14, true) };
+    if (id === "data" && fmt) {
+      const n = Math.floor(Math.min(size, v.byteLength - body) / (fmt.bits / 8) / fmt.ch), out = new Float32Array(n), step = fmt.bits / 8 * fmt.ch;
+      for (let i = 0; i < n; i++) { const o = body + i * step; out[i] = fmt.bits === 32 && fmt.code !== 1 ? v.getFloat32(o, true) : fmt.bits === 16 ? v.getInt16(o, true) / 32768 : v.getInt32(o, true) / 2147483648; }
+      return { rate: fmt.rate, data: out };
+    }
+    p = body + size + (size & 1);
+  }
+  throw new Error("not a wav");
+}
+
+function stopSources() { for (const s of P.srcs) { try { s.stop(); } catch {} } P.srcs = []; }
+function position() { return P.playing ? Math.min(P.dur, P.offset + P.ctx.currentTime - P.startAt) : P.offset; }
+
+async function loadGroup(gr) {
+  const vs = versions(gr), key = vs.map(v => v.file).join("|");
+  if (P.key === key) return vs;
+  pause(); P.key = key; P.bufs = {}; P.peaks = {}; P.gain = {}; P.loading = true;
+  P.ctx = P.ctx || new (window.AudioContext || window.webkitAudioContext)();
+  await Promise.all(vs.map(async v => {
+    try {
+      const w = parseWav(await (await fetch("/files/" + v.file)).arrayBuffer()), d = w.data;
+      const buf = P.ctx.createBuffer(1, Math.max(1, d.length), w.rate); buf.copyToChannel(d, 0);
+      P.bufs[v.id] = buf;
+      const n = 600, step = Math.max(1, Math.floor(d.length / n)), pk = new Float32Array(n);
+      let sum = 0; for (let i = 0; i < d.length; i++) sum += d[i] * d[i];
+      for (let i = 0; i < n; i++) { let mx = 0; for (let j = i * step, e = Math.min(d.length, j + step); j < e; j++) { const a = Math.abs(d[j]); if (a > mx) mx = a; } pk[i] = mx; }
+      P.peaks[v.id] = pk; v.rms = Math.sqrt(sum / d.length);
+      P.gain[v.id] = v.rms;
+    } catch { /* missing file: the version just stays silent */ }
+  }));
+  P.dur = Math.max(0, ...Object.values(P.bufs).map(b => b.duration));
+  P.loading = false;
+  return vs;
+}
+
+function levelGain(id) {
+  if (!P.match) return 1;
+  const quietest = Math.min(...Object.values(P.gain).filter(x => x > 0));
+  return P.gain[id] > 0 ? quietest / P.gain[id] : 1;
+}
+
+function play(vs) {
+  if (!P.ctx || P.loading) return;
+  P.ctx.resume(); stopSources(); P.nodes = {};
+  if (P.offset >= P.dur - 0.05) P.offset = 0;
+  const when = P.ctx.currentTime + 0.03;
+  vs.forEach((v, i) => {
+    const buf = P.bufs[v.id]; if (!buf) return;
+    const src = P.ctx.createBufferSource(), g = P.ctx.createGain();
+    src.buffer = buf; g.gain.value = i === P.active ? levelGain(v.id) : 0;
+    src.connect(g).connect(P.ctx.destination); src.start(when, Math.min(P.offset, buf.duration));
+    P.srcs.push(src); P.nodes[v.id] = g;
+  });
+  P.startAt = when; P.playing = true; tick();
+}
+function pause() { if (P.playing) { P.offset = position(); P.playing = false; } stopSources(); cancelAnimationFrame(P.raf); drawHead(); }
+function select(vs, i) {
+  if (i < 0 || i >= vs.length) return; P.active = i;
+  if (P.playing) { const now = P.ctx.currentTime; vs.forEach((v, j) => { const g = P.nodes[v.id]; if (g) g.gain.setTargetAtTime(j === i ? levelGain(v.id) : 0, now, 0.008); }); }
+  drawWave(vs); document.querySelectorAll(".var[data-i]").forEach(r => r.classList.toggle("on", +r.dataset.i === i));
+}
+function seek(vs, frac) { const was = P.playing; pause(); P.offset = frac * P.dur; if (was) play(vs); else drawHead(); }
+function tick() { drawHead(); if (P.playing && position() >= P.dur) { pause(); P.offset = 0; drawHead(); $("pp") && ($("pp").textContent = "▶"); return; } if (P.playing) P.raf = requestAnimationFrame(tick); }
+const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+function drawHead() {
+  const h = document.querySelector(".wave .head"); if (!h) return;
+  const p = position(); h.style.left = (P.dur ? p / P.dur * 100 : 0) + "%";
+  $("clock").textContent = `${clock(p)} / ${clock(P.dur)}`;
+}
+function drawWave(vs) {
+  const cv = document.querySelector(".wave canvas"); if (!cv) return;
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = devicePixelRatio || 1; cv.width = w * dpr; cv.height = h * dpr;
+  const c = cv.getContext("2d"); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
+  const v = vs[P.active], pk = v && P.peaks[v.id]; if (!pk) return;
+  const g = levelGain(v.id), mx = Math.max(...Object.keys(P.peaks).map(k => Math.max(...P.peaks[k]) * levelGain(k))) || 1;
+  const bw = w / pk.length;
+  c.fillStyle = css(P.active === 0 ? "--wave" : "--accent");
+  for (let i = 0; i < pk.length; i++) { const a = Math.max(1, pk[i] * g / mx * (h - 4)); c.fillRect(i * bw, (h - a) / 2, Math.max(1, bw - 0.6), a); }
+}
+
+function cellsOf(a) {
+  if (!a) return { squash: "", tail: "", mod: "", oct: "" };
+  const squash = a.dryCrestDb != null ? sign(-(a.dryCrestDb - a.wetCrestDb)) + " dB" : "–";
+  const tail = a.tailMs != null ? a.tailMs + " ms" : "–";
+  const mod = a.levelModulation && a.levelModulation.rateHz ? `${a.levelModulation.rateHz} Hz` : "–";
+  const oct = a.octaveDownDb != null && a.octaveDownDb > -30 && (a.octaveDownAddedDb ?? 0) >= 10 ? `+${a.octaveDownAddedDb} dB` : "–";
+  return { squash, tail, mod, oct };
+}
+
+function drawCompare() {
+  const gs = groups();
+  $("group").hidden = $("delgroup").hidden = !gs.length;
+  if (!gs.length) { pause(); P.key = null; $("cmp").innerHTML = `<div class="empty">${esc(t("noTakes"))}</div>`; return; }
+  if (!gs.some(g => g.root.id === groupId)) groupId = (gs.find(g => g.reamps.length) || gs[0]).root.id;
+  $("group").innerHTML = gs.map(g => `<option value="${g.root.id}" ${g.root.id === groupId ? "selected" : ""}>${esc(g.root.label)} · ${g.reamps.length + 1} · ${ago(g.root.created)}</option>`).join("");
+  const gr = gs.find(g => g.root.id === groupId), vs = versions(gr), r = gr.root.analysis || {};
+  if (P.active >= vs.length) P.active = 0;
+  const pp = P.loading ? "…" : P.playing ? "❚❚" : "▶";
+  $("cmp").innerHTML = `
+    <div class="player">
+      <button class="play" id="pp" aria-label="play">${pp}</button>
+      <div class="wave" id="wave"><canvas></canvas><span class="head"></span></div>
+      <span class="clock" id="clock">0:00 / ${clock(P.dur)}</span>
+    </div>
+    <div class="row hint" style="margin-bottom:8px">
+      <label title="${esc(t("matchTip"))}" style="display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="match" ${P.match ? "checked" : ""}>${esc(t("match"))}</label>
+      <span>${t("keys")}</span>
+      ${r.dryPeakDbfs != null ? `<span style="margin-left:auto">${esc(t("playingAt", r.dryPeakDbfs, r.dryRmsDbfs))}</span>` : ""}
+    </div>
+    <div class="variants">
+      <div class="var head"><span></span><span>${esc(t("colName"))}</span><span class="n">${esc(t("colSquash"))}</span><span class="n">${esc(t("colTail"))}</span><span class="n">${esc(t("colMod"))}</span><span class="n">${esc(t("colOct"))}</span><span title="${esc(t("onChart"))}">📈</span><span></span></div>
+      ${vs.map((v, i) => { const c = cellsOf(v.a), sum = v.a ? [c.squash, c.tail !== "–" ? c.tail : "", c.mod !== "–" ? c.mod : "", c.oct !== "–" ? c.oct : ""].filter(Boolean).join(" · ") : "";
+        return `<div class="var ${i === P.active ? "on" : ""}" data-i="${i}">
+          <span class="k">${i < 9 ? i + 1 : ""}</span>
+          <span class="nm" title="${esc(v.name)}">${esc(v.name)}${v.sub ? `<small>${esc(v.sub)}</small>` : ""}</span>
+          <span class="n">${c.squash}</span><span class="n">${c.tail}</span><span class="n">${c.mod}</span><span class="n">${c.oct}</span>
+          <span>${v.take && v.take.analysis && v.take.analysis.playedGainDb ? `<input type="checkbox" data-chart="${v.take.id}" ${shown.includes(v.take.id) ? "checked" : ""} title="${esc(t("onChart"))}">` : ""}</span>
+          <span>${v.take && v.take !== gr.root ? `<button class="ghost" data-deltake="${v.take.id}" title="✕">✕</button>` : ""}</span>
+          ${sum ? `<span class="sum">${esc(sum)}</span>` : ""}
+        </div>`; }).join("")}
+    </div>
+    <div class="row" style="margin-top:10px">
+      <input class="slot" id="rslot" placeholder="${esc(t("slot"))}" title="${esc(t("slotTip"))}">
+      <button id="reampbtn">${esc(t("reampThrough"))}</button><span class="hint">${esc(t("handsOff"))}</span>
+    </div>`;
+  const ready = async () => { await loadGroup(gr); $("pp").textContent = P.playing ? "❚❚" : "▶"; drawWave(vs); drawHead(); };
+  $("pp").onclick = async () => { if (P.playing) { pause(); $("pp").textContent = "▶"; return; } $("pp").textContent = "…"; await ready(); play(vs); $("pp").textContent = "❚❚"; };
+  $("wave").onclick = async (e) => { const rc = $("wave").getBoundingClientRect(); await ready(); seek(vs, (e.clientX - rc.left) / rc.width); };
+  $("match").onchange = () => { P.match = $("match").checked; store.set("studio.match", P.match ? "1" : "0"); select(vs, P.active); };
+  $("cmp").querySelectorAll(".var[data-i]").forEach(row => row.onclick = (e) => { if (e.target.closest("input,button")) return; select(vs, +row.dataset.i); });
+  $("cmp").querySelectorAll("[data-chart]").forEach(cb => cb.onchange = () => { toggleShown(cb.dataset.chart, cb.checked); render(true); });
+  $("cmp").querySelectorAll("[data-deltake]").forEach(b => b.onclick = async () => { if (!confirm(t("confirmDel"))) return; await api("/api/delete", { kind: "takes", id: b.dataset.deltake }); P.key = null; poll(); });
+  $("reampbtn").onclick = async () => {
+    const slot = $("rslot").value.trim().toUpperCase();
+    const res = await api("/api/reamp", { take: gr.root.id, slot, label: `${gr.root.label} → ${slot || "current"}` }); if (res.error) alert(res.error); poll();
+  };
+  P.vs = vs;
+  if (P.key === vs.map(v => v.file).join("|")) { drawWave(vs); drawHead(); } else ready();
 }
 
 // ---------- dynamics & distortion for the focused measurement ----------
@@ -323,112 +653,92 @@ function focused() {
 }
 
 function drawDetail() {
-  const m = focused();
-  if (!m) { $("dyn").innerHTML = `<div class="empty">Run a full measurement.</div>`; $("dyn-facts").innerHTML = ""; $("dist").innerHTML = ""; $("dyn-name").textContent = ""; $("dist-note").textContent = ""; return; }
-  $("dyn-name").textContent = m.label;
+  const full = S.measurements.filter(m => m.report.dynamics), m = focused();
+  $("focus").hidden = full.length < 2;
+  $("focus").innerHTML = [...full].reverse().map(x => `<option value="${x.id}" ${m && x.id === m.id ? "selected" : ""}>${esc(x.label)}</option>`).join("");
+  if (!m) { $("dyn").innerHTML = `<div class="empty">${esc(t("runFull"))}</div>`; $("dyn-facts").innerHTML = ""; $("dist").innerHTML = ""; $("dist-note").textContent = ""; return; }
   const d = m.report.dynamics, curve = d.staticCurve;
-  const W = Math.max($("dyn").clientWidth, 260), H = Math.round(W * 0.62), mg = { l: 36, r: 10, t: 8, b: 26 };
+  const W = Math.max($("dyn").clientWidth, 240), H = Math.round(W * 0.62), mg = { l: 36, r: 10, t: 8, b: 26 };
   const iw = W - mg.l - mg.r, ih = H - mg.t - mg.b, lo = -60, hi = 0;
   const X = v => mg.l + (v - lo) / (hi - lo) * iw, Y = v => mg.t + (hi - Math.max(lo, Math.min(hi, v))) / (hi - lo) * ih;
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Output level against input level">`;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("dyn"))}">`;
   for (let v = lo; v <= hi; v += 12) g += `<line x1="${mg.l}" x2="${W - mg.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--grid")}"/><text x="${mg.l - 5}" y="${Y(v) + 4}" font-size="11" text-anchor="end" fill="${css("--muted")}">${v}</text><line x1="${X(v)}" x2="${X(v)}" y1="${mg.t}" y2="${mg.t + ih}" stroke="${css("--grid")}"/><text x="${X(v)}" y="${H - 8}" font-size="11" text-anchor="middle" fill="${css("--muted")}">${v}</text>`;
-  const off = curve.length ? curve[Math.floor(curve.length / 3)].outDbfs - curve[Math.floor(curve.length / 3)].inDbfs : 0;
+  const mid = curve[Math.floor(curve.length / 3)], off = mid ? mid.outDbfs - mid.inDbfs : 0;
   g += `<line x1="${X(lo)}" y1="${Y(lo + off)}" x2="${X(hi)}" y2="${Y(hi + off)}" stroke="${css("--axis")}" stroke-dasharray="4 4"/>`;
   g += `<polyline points="${curve.map(c => `${X(c.inDbfs)},${Y(c.outDbfs)}`).join(" ")}" fill="none" stroke="${css("--s1")}" stroke-width="2" stroke-linejoin="round"/>`;
   g += curve.map(c => `<circle cx="${X(c.inDbfs)}" cy="${Y(c.outDbfs)}" r="4" fill="${css("--s1")}" stroke="${css("--surface")}" stroke-width="2"><title>in ${c.inDbfs} → out ${c.outDbfs.toFixed(1)} dBFS</title></circle>`).join("");
-  g += `</svg>`;
-  $("dyn").innerHTML = g;
+  $("dyn").innerHTML = g + `</svg>`;
   const resp = m.report.response[0];
   $("dyn-facts").innerHTML = [
-    ["Saturation", d.saturationDb != null ? `${d.saturationDb} dB lost instantly on a 20 dB jump` : "–"],
-    ["Compression", d.compressionDb != null ? `${d.compressionDb} dB more over time` + (d.attackMs != null ? ` · attack ${d.attackMs} ms · release ${d.releaseMs} ms` : "") : "–"],
-    ["Reverb", resp.rt60s ? `RT60 ${resp.rt60s} s` : "–"],
-    ["Noise", `${m.report.noise.wetDbfs} dBFS at the output`],
-  ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("") + `<dt></dt><dd class="hint">dashed line = unity, so the curve bending under it is compression or clipping</dd>`;
+    [t("saturation"), d.saturationDb != null ? t("satV", d.saturationDb) : "–"],
+    [t("compression"), d.compressionDb != null ? t("compV", d.compressionDb) + (d.attackMs != null ? t("attack", d.attackMs, d.releaseMs) : "") : "–"],
+    [t("reverb"), resp.rt60s ? `RT60 ${resp.rt60s} s` : "–"],
+    [t("noise"), t("noiseV", m.report.noise.wetDbfs)],
+  ].map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("") + `<dt></dt><dd class="hint">${esc(t("unity"))}</dd>`;
   const dist = m.report.distortion || [];
   const levels = [...new Set(dist.map(x => x.levelDbfs))], freqs = [...new Set(dist.map(x => x.freqHz))];
-  $("dist").innerHTML = dist.length ? `<div class="scroll"><table><tr><th>in dBFS</th>${freqs.map(f => `<th>${fmtHz(f)} Hz</th>`).join("")}</tr>${levels.map(l => `<tr><td class="lv">${l}</td>${freqs.map(f => { const c = dist.find(x => x.freqHz === f && x.levelDbfs === l); return `<td title="H2 ${c.h2Db} dB · H3 ${c.h3Db} dB · even−odd ${c.evenOddDb} dB">${c.thdPct.toFixed(1)}%<br><span style="color:${css("--muted")}">${c.h2Db}/${c.h3Db}</span></td>`; }).join("")}</tr>`).join("")}</table></div>` : "";
+  $("dist").innerHTML = dist.length ? `<div class="scroll"><table><tr><th>${esc(t("inDbfs"))}</th>${freqs.map(f => `<th>${fmtHz(f)} Hz</th>`).join("")}</tr>${levels.map(l => `<tr><td class="lv">${l}</td>${freqs.map(f => { const c = dist.find(x => x.freqHz === f && x.levelDbfs === l); return `<td title="H2 ${c.h2Db} dB · H3 ${c.h3Db} dB · even−odd ${c.evenOddDb} dB">${c.thdPct.toFixed(1)}%<br><span style="color:${css("--muted")}">${c.h2Db}/${c.h3Db}</span></td>`; }).join("")}</tr>`).join("")}</table></div>` : "";
   const loud = dist.filter(x => x.levelDbfs === levels[levels.length - 1]);
   const bal = loud.length ? loud.reduce((a, x) => a + x.evenOddDb, 0) / loud.length : 0;
-  $("dist-note").textContent = dist.length ? `Driven hard it leans ${bal > 3 ? "even-order — warm, tube-like" : bal < -3 ? "odd-order — hard, fuzz/clip-like" : "neither way"} (${bal > 0 ? "+" : ""}${bal.toFixed(1)} dB). Measured at the output, so EQ after the drive tilts these.` : "";
-}
-
-// ---------- takes ----------
-function drawTakes() {
-  if (!S.takes.length) { $("takes").innerHTML = `<div class="empty">Record yourself playing, then reamp that take through other presets to compare them on the same performance.</div>`; return; }
-  $("takes").innerHTML = [...S.takes].reverse().map(t => {
-    const a = t.analysis || {}, lines = [];
-    if (a.dryPeakDbfs != null) lines.push(`Playing peaks ${a.dryPeakDbfs} dBFS, average ${a.dryRmsDbfs}`);
-    if (a.dryCrestDb != null) lines.push(`Transient ${(a.dryCrestDb - a.wetCrestDb).toFixed(1)} dB squashed (crest ${a.dryCrestDb} → ${a.wetCrestDb})`);
-    if (a.levelModulation) lines.push(a.levelModulation.rateHz ? `Level moves at ${a.levelModulation.rateHz} Hz by ${a.levelModulation.depthDb} dB` : "No tremolo-like movement");
-    if (a.octaveDownDb != null) lines.push(a.octaveDownDb <= -30 || (a.octaveDownAddedDb ?? 99) < 10 ? "Nothing added an octave below" : `Octave below at ${a.octaveDownDb} dB (+${a.octaveDownAddedDb} over dry)`);
-    if (a.tailMs != null) lines.push(`Tail ${a.tailMs} ms after the last note${a.tailMs > 250 ? " — delay or reverb" : ""}`);
-    const own = t.files.dry && t.files.dry.startsWith("takes/" + t.id);
-    const audio = (k, label) => t.files[k] ? `<div class="hint">${label}</div><audio controls preload="none" src="/files/${t.files[k]}"></audio>` : "";
-    return `<div class="take" data-id="${t.id}">
-      <div class="t"><strong>${esc(t.label)}</strong><span class="hint">${own ? "recorded" : "reamped" + (t.slot ? " through " + esc(t.slot) : "")} · ${t.by} · ${ago(t.created)}</span>
-        <button class="ghost" style="margin-left:auto" data-del="${t.id}" title="Delete">✕</button></div>
-      ${audio("dry", "dry")}${audio("wet", own ? "wet (as recorded)" : "wet")}
-      <div class="lines">${lines.map(l => `<div>${esc(l)}</div>`).join("")}</div>
-      ${own ? `<div class="row" style="margin-top:6px"><input class="slot" placeholder="slot" data-slotfor="${t.id}"><button data-reamp="${t.id}">Reamp through</button><span class="hint">hands off the strings</span></div>` : ""}
-    </div>`;
-  }).join("");
-  $("takes").querySelectorAll("[data-reamp]").forEach(b => b.onclick = async () => {
-    const id = b.dataset.reamp, slot = $("takes").querySelector(`[data-slotfor="${id}"]`).value.trim().toUpperCase();
-    const src = S.takes.find(t => t.id === id);
-    const r = await api("/api/reamp", { take: id, slot, label: `${src.label} → ${slot || "current"}` }); if (r.error) alert(r.error); poll();
-  });
-  $("takes").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { if (confirm("Delete this take?")) { await api("/api/delete", { kind: "takes", id: b.dataset.del }); poll(); } });
+  $("dist-note").textContent = dist.length ? t("lean", t(bal > 3 ? "even" : bal < -3 ? "odd" : "neither"), sign(bal)) : "";
 }
 
 // ---------- chat ----------
 function drawChat() {
   const el = $("chat"), atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
-  el.innerHTML = S.messages.length ? S.messages.map(m => `<div class="msg ${m.from}"><span class="who">${m.from === "user" ? "you" : m.from} · ${ago(m.ts)}</span>${esc(m.text)}</div>`).join("")
-    : `<div class="empty">Ask for a change here, then tell Claude Code to check the studio.</div>`;
+  el.innerHTML = S.messages.length ? S.messages.map(m => `<div class="msg ${m.from}"><span class="who">${m.from === "user" ? t("you") : m.from} · ${ago(m.ts)}</span>${esc(m.text)}</div>`).join("")
+    : `<div class="empty">${esc(t("chatEmpty"))}</div>`;
   if (atBottom) el.scrollTop = el.scrollHeight;
 }
 
 // ---------- status & polling ----------
+function setPane(p) {
+  $("ptabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.p === p));
+  document.querySelectorAll("[data-pane]").forEach(el => el.hidden = el.dataset.pane !== p);
+}
+
 function drawStatus() {
   const d = S.device || {};
-  $("dev").className = "pill " + (d.audio ? "ok" : "bad"); $("dev").textContent = d.audio ? "Anagram connected" : "Anagram not found";
+  $("dev").className = "pill " + (d.audio ? "ok" : "bad"); $("dev").textContent = d.audio ? t("connected") : t("notFound");
   const j = S.job, busy = j && !j.done;
   ["mquick", "mfull", "recbtn"].forEach(id => $(id).disabled = busy || !d.audio);
-  document.querySelectorAll("[data-reamp]").forEach(b => b.disabled = busy || !d.audio);
+  if ($("reampbtn")) $("reampbtn").disabled = busy || !d.audio;
   if (!j) { $("job").innerHTML = ""; }
   else {
     const el = (Date.now() / 1000 - j.started), pct = j.done ? 100 : Math.min(97, el / j.expect * 100);
-    const what = j.kind === "capture" ? `Recording “${esc(j.label)}” — play now` : `${j.kind === "measure" ? "Measuring" : "Reamping"} “${esc(j.label)}”`;
-    $("job").innerHTML = j.error ? `<span style="color:${css("--danger")}">${esc(j.error)}</span>` : j.done ? `Done: ${esc(j.label)}` :
+    const what = esc(t(j.kind === "capture" ? "jobRec" : j.kind === "measure" ? "jobMeasure" : "jobReamp", j.label));
+    $("job").innerHTML = j.error ? `<span style="color:${css("--danger")}">${esc(j.error)}</span>` : j.done ? esc(t("done", j.label)) :
       `<span>${what} · ${Math.max(0, Math.round(j.expect - el))} s</span><span class="bar"><i style="width:${pct}%"></i></span>`;
+    if (busy && j.kind === "capture") setPane("record");
   }
   const lv = S.live;
   if (lv) {
     const w = v => Math.max(0, Math.min(100, (v + 60) / 60 * 100));
     $("mrms").style.width = w(lv.rmsDb) + "%"; $("mpeak").style.left = w(lv.peakDb) + "%";
-    $("meterval").textContent = `Input peak ${lv.peakDb} dBFS · average ${lv.rmsDb} dBFS` + (lv.peakDb > -3 ? " — close to clipping" : "");
-  } else { $("mrms").style.width = "0"; $("mpeak").style.left = "0"; }
+    $("meterval").textContent = t("meter", lv.peakDb, lv.rmsDb) + (lv.peakDb > -3 ? t("clip") : "");
+  } else { $("mrms").style.width = "0"; $("mpeak").style.left = "0"; $("meterval").textContent = t("recHint"); }
 }
 
 function render(force) {
   const keys = {
-    data: S.measurements.map(m => m.id).join() + "|" + S.takes.map(t => t.id).join() + "|" + S.targets.map(t => t.id + t.created).join(),
+    data: S.measurements.map(m => m.id).join() + "|" + S.takes.map(x => x.id).join() + "|" + S.targets.map(x => x.id + x.created).join(),
     msgs: S.messages.length + (S.messages.length ? S.messages[S.messages.length - 1].id : ""),
   };
-  if (force || keys.data !== lastKeys.data) {
+  const changed = keys.data !== lastKeys.data;
+  if (force || changed) {
     // newly arrived measurements and targets join the chart on their own
     if (lastKeys.data !== undefined) {
       const fresh = [...S.measurements, ...S.targets].filter(x => !lastKeys.ids.has(x.id));
-      for (const f of fresh) { if (!shown.includes(f.id)) { shown.push(f.id); if (shown.length > MAX_SHOWN) shown.shift(); } if (S.measurements.includes(f)) focusId = f.id; }
+      for (const f of fresh) toggleShown(f.id, true);
+      const freshRoot = S.takes.filter(x => ownRecording(x) && !lastKeys.ids.has(x.id)).pop();
+      if (freshRoot) groupId = freshRoot.id;
     } else {
-      const latest = [...S.measurements].slice(-2).map(m => m.id); shown = [...latest, ...S.targets.slice(-1).map(t => t.id)];
+      shown = [...S.measurements.slice(-2).map(m => m.id), ...S.targets.slice(-1).map(x => x.id)];
     }
     lastKeys.ids = new Set([...S.measurements, ...S.takes, ...S.targets].map(x => x.id));
-    drawLegend(); drawFR(); drawDetail();
-    if (force !== true || keys.data !== lastKeys.data) drawTakes();
+    drawLegend(); drawFR(); drawDetail(); drawCompare();
   }
-  if (keys.msgs !== lastKeys.msgs) drawChat();
+  if (force === "all" || keys.msgs !== lastKeys.msgs) drawChat();
   lastKeys.data = keys.data; lastKeys.msgs = keys.msgs;
   drawStatus();
 }
@@ -437,7 +747,7 @@ let timer;
 async function poll() {
   clearTimeout(timer);
   try { S = await api("/api/state"); render(); }
-  catch { $("dev").className = "pill bad"; $("dev").textContent = "studio server stopped"; }
+  catch { $("dev").className = "pill bad"; $("dev").textContent = t("stopped"); }
   timer = setTimeout(poll, S.job && !S.job.done ? 250 : 1500);
 }
 
@@ -454,16 +764,33 @@ $("recbtn").onclick = async () => {
   if (r.error) alert(r.error); $("tlabel").value = ""; poll();
 };
 $("send").onclick = async () => {
-  const t = $("say").value.trim(); if (!t) return;
-  await api("/api/message", { text: t }); $("say").value = ""; poll();
+  const v = $("say").value.trim(); if (!v) return;
+  await api("/api/message", { text: v }); $("say").value = ""; poll();
 };
 $("say").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("send").click(); });
 $("lvl").querySelectorAll("button").forEach(b => b.onclick = () => {
   level = +b.dataset.l; $("lvl").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); drawFR();
 });
-$("tbl").onclick = () => { const t = $("frtable"); t.hidden = !t.hidden; $("tbl").textContent = t.hidden ? "table" : "chart only"; };
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { drawFR(); drawDetail(); }, 120); });
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render(true));
+$("tbl").onclick = () => { const el = $("frtable"); el.hidden = !el.hidden; $("tbl").textContent = el.hidden ? t("table") : t("chartOnly"); };
+$("ptabs").querySelectorAll("button").forEach(b => b.onclick = () => setPane(b.dataset.p));
+$("group").onchange = () => { pause(); groupId = $("group").value; P.active = 0; P.offset = 0; drawCompare(); };
+$("delgroup").onclick = async () => {
+  const gr = groups().find(g => g.root.id === groupId); if (!gr || !confirm(t("confirmGroup", gr.reamps.length))) return;
+  pause(); P.key = null;
+  for (const x of [...gr.reamps, gr.root]) await api("/api/delete", { kind: "takes", id: x.id });
+  shown = shown.filter(id => ![...gr.reamps, gr.root].some(x => x.id === id)); groupId = null; poll();
+};
+$("focus").onchange = () => { focusId = $("focus").value; drawDetail(); };
+$("lang").querySelectorAll("button").forEach(b => b.onclick = () => { lang = b.dataset.v; store.set("studio.lang", lang); applyLang(); render("all"); });
+$("theme").onclick = () => { theme = { auto: "light", light: "dark", dark: "auto" }[theme]; store.set("studio.theme", theme); applyTheme(); render("all"); };
+addEventListener("keydown", e => {
+  if (typing() || e.metaKey || e.ctrlKey || e.altKey || !P.vs) return;
+  if (e.code === "Space") { e.preventDefault(); $("pp") && $("pp").click(); }
+  else if (/^[1-9]$/.test(e.key)) select(P.vs, +e.key - 1);
+});
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { drawFR(); drawDetail(); P.vs && drawWave(P.vs); }, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render("all"));
+applyLang();
 poll();
 </script>
 </body>

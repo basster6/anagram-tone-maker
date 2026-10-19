@@ -124,6 +124,11 @@ both. Read `inbox`, answer with `say`, overlay goals with `target`. A take
 recorded on the page is the best reference for the player's real level — use it
 to decide which test level describes them.
 
+Reamps of one recording are grouped on the page under that recording, so the
+player can switch between versions mid-phrase at matched loudness. Label reamps
+`<take label> → <what changed>` (as `cli.py reamp --label` and the page do): the
+page shows only the part after the arrow.
+
 ## Checking a guessed file path
 
 Cabinet and model files are device-side paths you cannot list. When you have to
