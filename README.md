@@ -58,8 +58,9 @@ plug the pedal in, press **Connect**, and talk to the assistant in the page.
   what the slot held, and a firmware check before any write. Quit Darkglass Suite
   first; it holds the pedal exclusively.
 - **Measuring** goes over Web Audio. Browsers open the Anagram as a stereo device,
-  so once, in Audio MIDI Setup, select Anagram, Configure Speakers, and set stereo
-  left to channel 9; the page's Check button confirms it. Browsers cannot read the
+  so once, in Audio MIDI Setup, select Anagram, Configure Speakers, and set the
+  stereo Left channel to "Virtual Input" (channel 9, the reamp input); the page's
+  Check button confirms it. Browsers cannot read the
   dry instrument input, so a take to reamp is either an uploaded DI file or the
   experimental dry capture, which records through a near-transparent preset.
 - Measurements, takes, targets and the conversation stay in the browser
