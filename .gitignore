@@ -9,3 +9,4 @@ measurements/
 studio/
 .venv/
 __pycache__/
+backups/

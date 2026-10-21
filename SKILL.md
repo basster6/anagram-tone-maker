@@ -358,6 +358,10 @@ python3 tools/cli.py save 17A tone.json          # refuses if the slot is taken
 python3 tools/cli.py save 17A tone.json --force  # replace what is there
 ```
 
+The previous contents go to `backups/` before a replace or a delete; tell the user
+the file name it printed. Both refuse on a firmware line other than 1.18 — say so
+rather than passing `--any-firmware` on your own.
+
 Slots are addressed as bank plus letter: `01A`, `01B`, `01C`, `02A` … `42C`, which
 is 126 slots in all. The pedal stores each one as a file whose number is the slot
 number, so `17A` is `49.json`. `cli.py presets` lists what is occupied.

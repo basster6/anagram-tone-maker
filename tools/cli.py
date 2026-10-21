@@ -9,12 +9,12 @@ Command line front end for the Anagram tone maker skill.
     python3 tools/cli.py get 13.json
     python3 tools/cli.py validate tone.json
     python3 tools/cli.py audition tone.json
-    python3 tools/cli.py save 17A tone.json [--force]
+    python3 tools/cli.py save 17A tone.json [--force] [--any-firmware]
     python3 tools/cli.py goto 17A
     python3 tools/cli.py mode scene|stomp|preset
     python3 tools/cli.py scene 2|next|prev|default
     python3 tools/cli.py tuner | tap
-    python3 tools/cli.py delete 41A --yes
+    python3 tools/cli.py delete 41A --yes [--any-firmware]
     python3 tools/cli.py setup [--force]
     python3 tools/cli.py measure [--quick] [--slot 18C] [--save m.json]
     python3 tools/cli.py compare before.json after.json
@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -67,6 +68,34 @@ def _device():
     """An unopened connection; `with` opens it and closes it again."""
     from anagram import Anagram
     return Anagram()
+
+
+BACKUPS = Path(__file__).resolve().parent.parent / "backups"
+
+
+def _firmware_ok(dev, any_firmware: bool) -> bool:
+    """Writes are refused on a firmware line this tool was not built against."""
+    from anagram import TESTED_FIRMWARE
+    version = dev.firmware()["version"].strip()
+    parts = tuple(int(x) for x in version.lstrip("v").split(".")[:2] if x.isdigit())
+    if parts == TESTED_FIRMWARE or any_firmware:
+        return True
+    tested = ".".join(map(str, TESTED_FIRMWARE))
+    print(f"The pedal runs firmware {version}; this tool was built against {tested}.x. "
+          f"Not writing. Pass --any-firmware to write anyway.")
+    return False
+
+
+def _backup(filename: str, doc: dict) -> Path:
+    """Keep what a slot held before it is replaced or deleted."""
+    BACKUPS.mkdir(exist_ok=True)
+    stem, n = f"{time.strftime('%Y%m%d-%H%M%S')}-{filename[:-5]}", 1
+    path = BACKUPS / f"{stem}.json"
+    while path.exists():
+        n += 1
+        path = BACKUPS / f"{stem}-{n}.json"
+    path.write_text(json.dumps(doc, indent=2, ensure_ascii=False))
+    return path
 
 
 def cmd_info() -> int:
@@ -227,7 +256,7 @@ def cmd_audition(path: str) -> int:
     return 0
 
 
-def cmd_save(target: str, path: str, force: bool) -> int:
+def cmd_save(target: str, path: str, force: bool, any_firmware: bool = False) -> int:
     from anagram import slot_filename, slot_label
     filename = target if target.endswith(".json") else slot_filename(target)
     doc = _read_document(path)
@@ -237,12 +266,16 @@ def cmd_save(target: str, path: str, force: bool) -> int:
         print(summarise(issues))
         return 1
     with _device() as dev:
+        if not _firmware_ok(dev, any_firmware):
+            return 1
         existing = dev.get_preset(filename)
         if existing and not force:
             held = existing.get("preset", {}).get("name") or filename
             print(f'{slot_label(filename)} ({filename}) already holds "{held}". '
                   f"Pass --force to replace it.")
             return 1
+        if existing:
+            print(f"Kept the previous {slot_label(filename)} in {_backup(filename, existing)}")
         dev.save_preset(filename, doc)
         back = dev.get_preset(filename)
     name = (back or {}).get("preset", {}).get("name")
@@ -291,7 +324,7 @@ def cmd_midi_simple(what: str) -> int:
     return 0
 
 
-def cmd_delete(target: str, yes: bool) -> int:
+def cmd_delete(target: str, yes: bool, any_firmware: bool = False) -> int:
     from anagram import slot_filename, slot_label
     filename = target if target.endswith(".json") else slot_filename(target)
     with _device() as dev:
@@ -303,6 +336,9 @@ def cmd_delete(target: str, yes: bool) -> int:
         if not yes:
             print(f'{slot_label(filename)} holds "{held}". Pass --yes to delete it.')
             return 1
+        if not _firmware_ok(dev, any_firmware):
+            return 1
+        print(f"Kept a copy in {_backup(filename, existing)}")
         dev.delete_preset(filename)
         gone = dev.get_preset(filename) is None
     print(f'Deleted "{held}" from {slot_label(filename)} ({filename}).'
@@ -583,15 +619,15 @@ def main(argv: list[str]) -> int:
         if cmd == "validate":        return cmd_validate(rest[0])
         if cmd == "audition":        return cmd_audition(rest[0])
         if cmd == "save":
-            force = "--force" in rest
-            args = [a for a in rest if a != "--force"]
-            return cmd_save(args[0], args[1], force)
+            args = [a for a in rest if not a.startswith("--")]
+            return cmd_save(args[0], args[1], "--force" in rest, "--any-firmware" in rest)
         if cmd == "goto":            return cmd_goto(rest[0])
         if cmd == "mode":            return cmd_mode(rest[0])
         if cmd == "scene":           return cmd_scene(rest[0])
         if cmd in ("tuner", "tap"):  return cmd_midi_simple(cmd)
         if cmd == "delete":
-            return cmd_delete([a for a in rest if a != "--yes"][0], "--yes" in rest)
+            args = [a for a in rest if not a.startswith("--")]
+            return cmd_delete(args[0], "--yes" in rest, "--any-firmware" in rest)
         if cmd == "setup":           return cmd_setup("--force" in rest)
         if cmd == "measure":         return cmd_measure(rest)
         if cmd == "compare":         return cmd_compare(rest[0], rest[1])

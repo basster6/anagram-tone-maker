@@ -125,6 +125,3 @@ edit_anagram_presets {
 `presets` is an array, so several slots can be written at once. `name` is the
 slot's file name and `content` is the whole document. The device writes it to
 `/data/user-files/presets/<name>` and keeps the document's own `uuid`.
-
-Note that pushing a preset *file* over the serial port is a different mechanism,
-and it is blocked: `open_file_receiver` answers `Invalid dirName` for `presets`.

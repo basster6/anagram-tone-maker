@@ -21,6 +21,8 @@ from pathlib import Path
 CATALOG = "https://api-v2.darkglass.com/shopify/products"
 CACHE = Path(__file__).resolve().parent.parent / "reference" / ".market-cache.json"
 MAX_AGE = 7 * 24 * 3600
+# Say who is asking: this is an unofficial tool reading a public, undocumented endpoint.
+USER_AGENT = "anagram-tone-maker (+https://github.com/basster6/anagram-tone-maker)"
 
 
 class MarketError(RuntimeError):
@@ -33,7 +35,8 @@ def _fetch_all(page_size: int = 50, pages: int = 20) -> dict:
     for page in range(1, pages + 1):
         url = f"{CATALOG}?page={page}&pageSize={page_size}"
         try:
-            with urllib.request.urlopen(url, timeout=25) as response:
+            request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(request, timeout=25) as response:
                 body = json.load(response)["data"]
         except (urllib.error.URLError, KeyError, json.JSONDecodeError) as exc:
             raise MarketError(f"Could not read the marketplace: {exc}") from exc

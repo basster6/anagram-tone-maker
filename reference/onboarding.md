@@ -19,7 +19,8 @@ In that order. `refresh-blocks` writes
 `reference/blocks-{factory,user}-catalog.md` and the matching JSON, so the
 catalogue matches their firmware and their purchases instead of the bundled
 snapshot. `market` fills in what each installed block actually models — the only
-place that says, and it caches, so later runs are instant. `analyze` writes
+place that says, and it caches, so later runs are instant. It reads an
+undocumented shop endpoint and is optional: if it fails, say so and carry on. `analyze` writes
 `reference/rig-profile.md`. `setup` prints what it inferred and writes a draft
 `rig.yaml`.
 
