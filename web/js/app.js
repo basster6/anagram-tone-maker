@@ -66,6 +66,9 @@
     const p = $("pedal");
     p.className = "pill " + (dev.connected ? "ok" : "bad");
     p.textContent = dev.supported ? (dev.connected ? t("pedalOn") : t("pedalOff")) : t("noHid");
+    p.title = dev.connected ? "" : t("connect");
+    $("route").title = app.route === true ? "" : t("check");
+    $("aistate").title = t("tabSetup");
     $("connect").textContent = dev.connected ? t("disconnect") : t("connect");
     $("connect").className = dev.connected ? "" : "primary";
     const r = $("route");
@@ -396,6 +399,10 @@
 
   // ---------- controls ----------
   $("tabs").querySelectorAll("button").forEach(b => b.onclick = () => setPane(b.dataset.p));
+  // the status pills lead straight to what fixes them
+  $("pedal").onclick = () => { setPane("pedal"); if (!dev.connected && dev.supported) $("connect").click(); };
+  $("route").onclick = () => { setPane("setup"); if (app.route !== true) $("checkroute").click(); };
+  $("aistate").onclick = () => { setPane("setup"); $("apikey").focus(); };
   $("connect").onclick = () => guard(async () => {
     if (dev.connected) { await dev.disconnect(); return; }
     if (await dev.connect()) await afterConnect();
