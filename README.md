@@ -46,9 +46,17 @@ web/
 
 ## The browser app (no install)
 
-`web/index.html` does what the skill does without Python, a terminal or an AI
-agent: open it in **Chrome or Edge** (double-click works; it runs from `file://`),
-plug the pedal in, press **Connect**, and talk to the assistant in the page.
+`web/` does what the skill does without Python, a terminal or an AI agent: open
+it in **Chrome or Edge** from a web address, plug the pedal in, press **Connect**,
+and talk to the assistant in the page. Any static host works, or locally:
+
+```sh
+python3 -m http.server 8080 --bind 127.0.0.1 -d web   # then open http://localhost:8080
+```
+
+Opening `index.html` straight from disk (`file://`) is not enough: Chrome keeps no
+permissions for such a page and hides the audio devices' names and ids, so the
+page cannot send audio to the pedal and measuring fails.
 
 - **The assistant** runs on your own API key, entered under Setup: Gemini (free
   key from Google AI Studio), OpenAI or Anthropic. The key stays in this browser
