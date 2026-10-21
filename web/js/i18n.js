@@ -43,7 +43,7 @@
     keyHints: { gemini: "Free key from Google AI Studio, no card. Free-tier prompts may be used by Google to improve its products; web search may need a paid key, in which case the search key below is used.", openai: "Needs prepaid credit on the OpenAI platform.", anthropic: "Needs credit on the Anthropic console." },
     rigSection: "Rig", audioSection: "Reamp routing", check: "Check",
     routeOk: "Test tones reach the pedal's reamp input.", routeBad: "Nothing came back from the reamp input.",
-    routeSteps: ["Open Audio MIDI Setup (Applications > Utilities).", "Select Anagram in the list and open Configure Speakers.", "Under Stereo, set the left channel to 9 and apply.", "Return here and press Check."],
+    routeSteps: ["Press ⌘ Space, type Audio MIDI Setup and open it.", "Select Anagram in the list on the left, then press Configure Speakers… at the bottom right.", "On the Stereo tab, change the left speaker to 9 (the right one does not matter), then press Apply and Done.", "Come back here and press Check."],
     routeNote: "With this setting, anything the computer plays to the Anagram as stereo left goes into the effects chain.",
     // rig form
     rig: {
@@ -122,7 +122,7 @@
     keyHints: { gemini: "Google AI Studio 에서 카드 없이 무료 키를 발급할 수 있습니다. 무료 사용분의 입력은 Google 의 제품 개선에 쓰일 수 있고, 웹 검색은 유료 키가 필요할 수 있습니다. 그 경우 아래 검색 키를 사용합니다.", openai: "OpenAI 플랫폼에 선불 크레딧이 필요합니다.", anthropic: "Anthropic 콘솔에 크레딧이 필요합니다." },
     rigSection: "리그", audioSection: "리앰프 경로", check: "확인",
     routeOk: "테스트 톤이 페달의 리앰프 입력에 도달합니다.", routeBad: "리앰프 입력에서 돌아온 소리가 없습니다.",
-    routeSteps: ["Audio MIDI 설정을 엽니다 (응용 프로그램 > 유틸리티).", "목록에서 Anagram 을 선택하고 스피커 구성을 엽니다.", "스테레오에서 왼쪽 채널을 9로 지정하고 적용합니다.", "이 화면으로 돌아와 확인을 누릅니다."],
+    routeSteps: ["⌘ Space 를 누르고 \"Audio MIDI 설정\" 을 입력해 엽니다.", "왼쪽 목록에서 Anagram 을 선택하고, 오른쪽 아래의 \"스피커 구성…\" 을 누릅니다.", "\"스테레오\" 탭에서 왼쪽 스피커를 9로 바꾸고 \"적용\", \"완료\" 를 누릅니다. 오른쪽은 그대로 두어도 됩니다.", "이 화면으로 돌아와 확인을 누릅니다."],
     routeNote: "이 설정에서는 컴퓨터가 Anagram 의 스테레오 왼쪽으로 재생하는 소리가 모두 이펙트 체인으로 들어갑니다.",
     rig: {
       outputs: ["출력 연결 대상", ["오디오 인터페이스 또는 DI", "앰프 헤드와 실제 캐비닛", "파워드 캐비닛, FRFR, 모니터", "FOH 직결"]],
