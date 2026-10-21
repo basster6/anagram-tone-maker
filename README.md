@@ -37,7 +37,36 @@ tools/
   market.py                   optional: fetches block descriptions from the marketplace
   tonelab.py                  optional: community detail on shop blocks (anagramblocks.com)
   build_reference.py          re-reads the catalogue from a device
+  build_web.py                copies the reference material into web/data
+web/
+  index.html                  the browser app: open it in Chrome, no install
+  js/, css/, data/            its code and bundled reference
+  test/                       node tests (validator, USB framing, DSP, AI layer)
 ```
+
+## The browser app (no install)
+
+`web/index.html` does what the skill does without Python, a terminal or an AI
+agent: open it in **Chrome or Edge** (double-click works; it runs from `file://`),
+plug the pedal in, press **Connect**, and talk to the assistant in the page.
+
+- **The assistant** runs on your own API key, entered under Setup: Gemini (free
+  key from Google AI Studio), OpenAI or Anthropic. The key stays in this browser
+  and goes only to that provider. Web research needs a key that includes search;
+  Gemini's free tier does not.
+- **Pedal control** goes over WebHID: presets, audition, save with a backup of
+  what the slot held, and a firmware check before any write. Quit Darkglass Suite
+  first; it holds the pedal exclusively.
+- **Measuring** goes over Web Audio. Browsers open the Anagram as a stereo device,
+  so once, in Audio MIDI Setup, select Anagram, Configure Speakers, and set stereo
+  left to channel 9; the page's Check button confirms it. Browsers cannot read the
+  dry instrument input, so a take to reamp is either an uploaded DI file or the
+  experimental dry capture, which records through a near-transparent preset.
+- Measurements, takes, targets and the conversation stay in the browser
+  (IndexedDB). Nothing is uploaded anywhere.
+
+Run `python3 tools/build_web.py` after editing the reference files the app uses.
+The Python tools below remain the way to work from Claude Code and other agents.
 
 ## Setup
 

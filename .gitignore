@@ -10,3 +10,4 @@ studio/
 .venv/
 __pycache__/
 backups/
+web/test/fixtures/

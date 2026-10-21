@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anagram Tone Maker</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 data-t="title"></h1>
+    <span class="pill" id="pedal"></span>
+    <span class="pill" id="route"></span>
+    <span class="pill" id="aistate"></span>
+    <div class="job" id="job"></div>
+    <span class="seg" id="lang"><button data-v="en">EN</button><button data-v="ko">한국어</button></span>
+    <button class="ghost" id="theme"></button>
+  </header>
+
+  <div class="grid">
+    <main>
+      <section class="card">
+        <h2><span data-t="fr"></span> <span class="sub" data-t="frSub"></span>
+          <span class="end">
+            <span class="seg" id="lvl"><button data-l="0" class="on" data-t="lvl24"></button><button data-l="1" data-t="lvl12"></button></span>
+            <button class="ghost" id="tbl" data-t="table"></button>
+          </span>
+        </h2>
+        <div class="chart" id="fr"></div>
+        <div id="frtable" hidden></div>
+        <div class="chips" id="kinds"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <section class="card">
+        <h2><span data-t="refTitle"></span> <span class="sub" data-t="refSub"></span></h2>
+        <div id="refcard"></div>
+      </section>
+
+      <section class="card">
+        <h2><span data-t="compare"></span> <span class="sub" data-t="compareSub"></span>
+          <span class="end"><select id="group" aria-label="take"></select>
+            <button class="ghost" id="delgroup" data-t-title="deleteGroup">✕</button></span>
+        </h2>
+        <div id="cmp"></div>
+      </section>
+
+      <section class="two">
+        <div class="card">
+          <h2><span data-t="dyn"></span> <span class="sub" data-t="dynSub"></span>
+            <span class="end"><select id="focus" aria-label="measurement"></select></span></h2>
+          <div class="chart" id="dyn"></div>
+          <dl class="facts" id="dyn-facts"></dl>
+        </div>
+        <div class="card">
+          <h2><span data-t="dist"></span> <span class="sub" data-t="distSub"></span></h2>
+          <div id="dist"></div>
+          <p class="hint" id="dist-note"></p>
+        </div>
+      </section>
+    </main>
+
+    <aside>
+      <section class="card fill">
+        <div class="tabs" id="tabs">
+          <button data-p="assistant" class="on" data-t="tabAssistant"></button>
+          <button data-p="pedal" data-t="tabPedal"></button>
+          <button data-p="setup" data-t="tabSetup"></button>
+        </div>
+
+        <div class="pane" data-pane="assistant">
+          <div class="chat" id="chat"></div>
+          <div class="quick" id="quick"></div>
+          <div class="compose">
+            <textarea id="say" data-t-ph="sayPh"></textarea>
+            <button class="primary" id="send" data-t="send"></button>
+          </div>
+          <div class="row" style="margin-top:6px"><button class="ghost" id="newchat" data-t="newChat"></button></div>
+        </div>
+
+        <div class="pane" data-pane="pedal" hidden>
+          <div class="row"><button class="primary" id="connect" data-t="connect"></button><span class="hint" id="fw"></span></div>
+          <div class="row" style="margin-top:8px"><button id="readblocks" data-t="readBlocks"></button><span class="hint" id="ublocks"></span></div>
+          <hr class="sep">
+          <h2><span data-t="measure"></span></h2>
+          <div class="row"><input id="mlabel" data-t-ph="labelPh" style="flex:1">
+            <button class="primary" id="mquick" data-t="quick"></button><button id="mfull" data-t="full"></button></div>
+          <p class="hint" data-t="measureHint"></p>
+          <hr class="sep">
+          <h2><span data-t="record"></span></h2>
+          <div class="row"><input id="tlabel" data-t-ph="labelPh" style="flex:1">
+            <input class="secs" id="secs" type="number" min="2" max="120" value="20"> <span data-t="secs"></span></div>
+          <div class="row" style="margin-top:8px">
+            <button class="rec" id="recwet" data-t="recWet"></button>
+            <button id="recdry" data-t="recDry" data-t-title="recDryTip"></button>
+            <label class="hint" style="cursor:pointer"><input type="file" id="upload" accept=".wav,audio/wav" hidden><u data-t="uploadDi"></u></label>
+          </div>
+          <div class="meter" aria-hidden="true"><i id="mrms"></i><b id="mpeak"></b></div>
+          <div class="hint" id="meterval"></div>
+          <hr class="sep">
+          <h2><span data-t="presets"></span> <span class="end"><button class="ghost" id="loadpresets" data-t="refresh"></button></span></h2>
+          <div class="presets" id="presets"></div>
+        </div>
+
+        <div class="pane" data-pane="setup" hidden>
+          <h2 data-t="aiSection"></h2>
+          <label class="field"><span data-t="provider"></span><select id="provider"></select></label>
+          <label class="field"><span><span data-t="apiKey"></span> · <a id="keyurl" target="_blank" rel="noopener" data-t="getKey"></a></span>
+            <input id="apikey" type="password" autocomplete="off" spellcheck="false"></label>
+          <p class="hint" id="keyhint"></p>
+          <label class="field"><span data-t="model"></span>
+            <span class="row"><select id="model" style="flex:1"></select><button id="loadmodels" data-t="loadModels"></button></span></label>
+          <label class="field"><span><span data-t="searchKey"></span> · <a href="https://app.tavily.com" target="_blank" rel="noopener" data-t="getKey"></a></span>
+            <input id="searchkey" type="password" autocomplete="off" spellcheck="false"></label>
+          <p class="hint" data-t="keyNote"></p>
+          <hr class="sep">
+          <h2 data-t="audioSection"></h2>
+          <div class="row"><button id="checkroute" data-t="check"></button><span class="hint" id="routemsg"></span></div>
+          <ol class="steps" id="routesteps"></ol>
+          <p class="hint" data-t="routeNote"></p>
+          <hr class="sep">
+          <h2 data-t="rigSection"></h2>
+          <div id="rigform"></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<dialog id="dlg"><h3 id="dlgtitle"></h3><p id="dlgtext"></p>
+  <div class="row"><button id="dlgno" data-t="cancel"></button><button class="primary" id="dlgyes" data-t="save"></button></div></dialog>
+
+<script src="data/blocks-factory.js"></script>
+<script src="data/knowledge.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/dsp.js"></script>
+<script src="js/device.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/store.js"></script>
+<script src="js/rig.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/prompt.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/match.js"></script>
+<script src="js/reference.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
