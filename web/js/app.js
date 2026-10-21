@@ -113,7 +113,8 @@
 
   async function loadPresets() {
     if (!dev.connected) return;
-    app.presetSlots = (await dev.presetSlots()).map(p => ({ slot: AT.device.slotLabel(p.filename), filename: p.filename, name: p.name }));
+    app.presetSlots = (await dev.presetSlots()).map(p => ({ slot: AT.device.slotLabel(p.filename), filename: p.filename, name: p.name }))
+      .sort((a, b) => parseInt(a.filename, 10) - parseInt(b.filename, 10));
     drawPresets(); C.drawCompare();
   }
 
