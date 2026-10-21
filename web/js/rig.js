@@ -10,38 +10,45 @@
   const AT = (root.AT = root.AT || {});
   const FS = 48000;
 
-  const WORKLET = `
-  class Rec extends AudioWorkletProcessor {
-    constructor() {
-      super(); this.jobs = []; this.meterEvery = 0; this.acc = 0; this.peak = 0; this.sum = 0; this.count = 0;
-      this.port.onmessage = (e) => {
-        const m = e.data;
-        if (m.cmd === "arm") this.jobs.push({ id: m.id, from: m.from, to: m.to, buf: new Float32Array(m.to - m.from) });
-        if (m.cmd === "meter") this.meterEvery = m.every || 0;
-      };
+  // The recorder: jobs record [from, to) in context frames, the meter reports levels.
+  // The same code runs in an AudioWorklet, or on the main thread where a page
+  // opened from file:// may not load a worklet.
+  const CORE = `
+  class RecCore {
+    constructor(post) { this.post = post; this.jobs = []; this.meterEvery = 0; this.peak = 0; this.sum = 0; this.count = 0; }
+    message(m) {
+      if (m.cmd === "arm") this.jobs.push({ id: m.id, from: m.from, to: m.to, buf: new Float32Array(m.to - m.from) });
+      if (m.cmd === "meter") this.meterEvery = m.every || 0;
     }
-    process(inputs) {
-      const inp = inputs[0];
-      if (!inp || !inp.length) return true;
-      const a = inp[0], b = inp[1] || inp[0], n = a.length, f0 = currentFrame;
+    process(a, b, f0) {
+      const n = a.length;
       for (let i = this.jobs.length - 1; i >= 0; i--) {
         const j = this.jobs[i];
         const lo = Math.max(f0, j.from), hi = Math.min(f0 + n, j.to);
         for (let f = lo; f < hi; f++) j.buf[f - j.from] = (a[f - f0] + b[f - f0]) * 0.5;
-        if (f0 + n >= j.to) { this.port.postMessage({ id: j.id, buf: j.buf }, [j.buf.buffer]); this.jobs.splice(i, 1); }
+        if (f0 + n >= j.to) { this.post({ id: j.id, buf: j.buf }, [j.buf.buffer]); this.jobs.splice(i, 1); }
       }
       if (this.meterEvery) {
         for (let i = 0; i < n; i++) { const v = (a[i] + b[i]) * 0.5, x = Math.abs(v); if (x > this.peak) this.peak = x; this.sum += v * v; }
         this.count += n;
         if (this.count >= this.meterEvery) {
-          this.port.postMessage({ meter: { peak: this.peak, rms: Math.sqrt(this.sum / this.count) } });
+          this.post({ meter: { peak: this.peak, rms: Math.sqrt(this.sum / this.count) } });
           this.peak = 0; this.sum = 0; this.count = 0;
         }
       }
+    }
+  }`;
+  const WORKLET = CORE + `
+  class Rec extends AudioWorkletProcessor {
+    constructor() { super(); this.core = new RecCore((m, t) => this.port.postMessage(m, t || [])); this.port.onmessage = (e) => this.core.message(e.data); }
+    process(inputs) {
+      const inp = inputs[0];
+      if (inp && inp.length) this.core.process(inp[0], inp[1] || inp[0], currentFrame);
       return true;
     }
   }
   registerProcessor("at-rec", Rec);`;
+  const RecCore = new Function(CORE + "; return RecCore;")();
 
   const dbOf = x => 20 * Math.log10(Math.max(x, 1e-12));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -52,7 +59,11 @@
     }
 
     static async devices() {
-      try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); } catch {}
+      try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); }
+      catch (e) {
+        const err = new Error("Microphone access was not allowed, so the browser hides the audio devices.");
+        err.code = "no-permission"; throw err;
+      }
       const list = await navigator.mediaDevices.enumerateDevices();
       const pick = kind => list.filter(d => d.kind === kind && /anagram/i.test(d.label)).sort((a, b) => (a.deviceId === "default") - (b.deviceId === "default"))[0];
       return { input: pick("audioinput"), output: pick("audiooutput") };
@@ -61,7 +72,7 @@
     async open() {
       if (this.ctx) return this;
       const { input, output } = await Rig.devices();
-      if (!input || !output) throw new Error("No Anagram audio device. Plug the pedal in over USB and allow microphone access.");
+      if (!input || !output) { const err = new Error("No Anagram audio device. Plug the pedal in over USB."); err.code = "no-device"; throw err; }
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: {
         deviceId: { exact: input.deviceId }, channelCount: { ideal: 2 }, sampleRate: FS,
         echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
@@ -69,14 +80,27 @@
       if (ctx.sampleRate !== FS) throw new Error(`The browser opened audio at ${ctx.sampleRate} Hz; the pedal runs at 48 kHz.`);
       if (!ctx.setSinkId) throw new Error("This browser cannot choose an audio output. Use Chrome or Edge.");
       await ctx.setSinkId(output.deviceId);
-      const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
-      await ctx.audioWorklet.addModule(url);
       const src = ctx.createMediaStreamSource(this.stream);
-      this.rec = new AudioWorkletNode(ctx, "at-rec", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 2, channelCountMode: "explicit" });
-      this.rec.port.onmessage = e => {
-        if (e.data.meter) { this.onmeter && this.onmeter({ peakDb: +dbOf(e.data.meter.peak).toFixed(1), rmsDb: +dbOf(e.data.meter.rms).toFixed(1) }); return; }
-        const done = this.jobs.get(e.data.id); if (done) { this.jobs.delete(e.data.id); done(e.data.buf); }
+      const onMessage = m => {
+        if (m.meter) { this.onmeter && this.onmeter({ peakDb: +dbOf(m.meter.peak).toFixed(1), rmsDb: +dbOf(m.meter.rms).toFixed(1) }); return; }
+        const done = this.jobs.get(m.id); if (done) { this.jobs.delete(m.id); done(m.buf); }
       };
+      try {
+        const url = URL.createObjectURL(new Blob([WORKLET], { type: "application/javascript" }));
+        await ctx.audioWorklet.addModule(url);
+        this.rec = new AudioWorkletNode(ctx, "at-rec", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 2, channelCountMode: "explicit" });
+        this.rec.port.onmessage = e => onMessage(e.data);
+        this.send = m => this.rec.port.postMessage(m);
+      } catch {
+        // file:// pages cannot load a worklet; record on the main thread instead
+        const core = new RecCore(onMessage);
+        this.rec = ctx.createScriptProcessor(1024, 2, 1);
+        this.rec.onaudioprocess = e => {
+          const ib = e.inputBuffer, a = ib.getChannelData(0), b = ib.numberOfChannels > 1 ? ib.getChannelData(1) : a;
+          core.process(a, b, Math.round(e.playbackTime * FS) - ib.length);
+        };
+        this.send = m => core.message(m);
+      }
       const mute = ctx.createGain(); mute.gain.value = 0;
       src.connect(this.rec); this.rec.connect(mute); mute.connect(ctx.destination);
       const channels = ctx.destination.maxChannelCount >= 9 ? 9 : 2;
@@ -94,12 +118,12 @@
       this.ctx = null; this.latency = null; this.outChannel = null;
     }
 
-    meter(on) { this.rec && this.rec.port.postMessage({ cmd: "meter", every: on ? 2400 : 0 }); }
+    meter(on) { this.send && this.send({ cmd: "meter", every: on ? 2400 : 0 }); }
 
     // Record `frames` frames starting at context frame `from`.
     _record(from, frames) {
       const id = this.nextJob++;
-      return new Promise(resolve => { this.jobs.set(id, resolve); this.rec.port.postMessage({ cmd: "arm", id, from, to: from + frames }); });
+      return new Promise(resolve => { this.jobs.set(id, resolve); this.send({ cmd: "arm", id, from, to: from + frames }); });
     }
 
     async _play(signal, tailSeconds, channel) {
