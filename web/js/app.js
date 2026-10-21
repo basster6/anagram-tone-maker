@@ -185,7 +185,7 @@
     return { id, summary: AT.dsp.summary(report) };
   }
 
-  const audioError = e => e && e.code === "no-permission" ? t("micDenied") : e && e.code === "no-device" ? t("noAudio") : e && e.code === "no-reamp" ? t("routeBad") : (e && e.message) || String(e);
+  const audioError = e => e && e.code === "no-permission" ? t("micDenied") : e && e.code === "no-device" ? t("noAudio") + ` (${e.missing}; ${(e.seen || []).join(", ") || "-"})` : e && e.code === "no-reamp" ? t("routeBad") : (e && e.message) || String(e);
 
   function routeError(e) {
     if (e && e.code) { if (e.code === "no-reamp") app.route = false; drawStatus(); setPane("setup"); $("routemsg").textContent = audioError(e); throw new Error(audioError(e)); }

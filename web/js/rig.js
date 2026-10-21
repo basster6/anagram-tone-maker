@@ -58,21 +58,29 @@
       this.ctx = null; this.latency = null; this.outChannel = null; this.jobs = new Map(); this.nextJob = 1; this.onmeter = null;
     }
 
+    // List devices while a capture is open: a page without a stored permission
+    // (file:// keeps none) only sees device names during an active capture.
     static async devices() {
-      try { (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach(t => t.stop()); }
+      let probe;
+      try { probe = await navigator.mediaDevices.getUserMedia({ audio: true }); }
       catch (e) {
         const err = new Error("Microphone access was not allowed, so the browser hides the audio devices.");
         err.code = "no-permission"; throw err;
       }
-      const list = await navigator.mediaDevices.enumerateDevices();
-      const pick = kind => list.filter(d => d.kind === kind && /anagram/i.test(d.label)).sort((a, b) => (a.deviceId === "default") - (b.deviceId === "default"))[0];
-      return { input: pick("audioinput"), output: pick("audiooutput") };
+      try {
+        const list = await navigator.mediaDevices.enumerateDevices();
+        const pick = kind => list.filter(d => d.kind === kind && /anagram/i.test(d.label)).sort((a, b) => (a.deviceId === "default") - (b.deviceId === "default"))[0];
+        return { input: pick("audioinput"), output: pick("audiooutput"), seen: list.filter(d => d.kind !== "videoinput").map(d => d.label || "(unnamed)") };
+      } finally { probe.getTracks().forEach(t => t.stop()); }
     }
 
     async open() {
       if (this.ctx) return this;
-      const { input, output } = await Rig.devices();
-      if (!input || !output) { const err = new Error("No Anagram audio device. Plug the pedal in over USB."); err.code = "no-device"; throw err; }
+      const { input, output, seen } = await Rig.devices();
+      if (!input || !output) {
+        const err = new Error("No Anagram audio device. Plug the pedal in over USB.");
+        err.code = "no-device"; err.seen = seen; err.missing = !input ? "input" : "output"; throw err;
+      }
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: {
         deviceId: { exact: input.deviceId }, channelCount: { ideal: 2 }, sampleRate: FS,
         echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
