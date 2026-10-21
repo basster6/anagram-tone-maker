@@ -157,6 +157,16 @@
     ];
     tools.push(
       {
+        name: "read_guide",
+        description: "Read one of the guides: what-blocks-model, choosing-blocks, preset-format, examples.",
+        parameters: obj({ name: { type: "string", enum: ["what-blocks-model", "choosing-blocks", "preset-format", "examples"] } }, ["name"]),
+        run: ({ name }) => {
+          const K = (root.AT_DATA && root.AT_DATA.knowledge) || {};
+          const map = { "what-blocks-model": K.whatBlocksModel, "choosing-blocks": K.choosingBlocks, "preset-format": K.presetFormat, "examples": JSON.stringify(K.examples || {}) };
+          return map[name] || { error: "No such guide." };
+        },
+      },
+      {
         name: "list_references",
         description: "Reference tones the player cut from a bass stem, with the DI take linked to each (the player playing the same part).",
         parameters: obj({}),

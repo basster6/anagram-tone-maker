@@ -47,16 +47,11 @@ Keep answers short and about the sound.`;
   }
 
   function build({ rig, language }) {
-    const K = (root.AT_DATA && root.AT_DATA.knowledge) || {};
-    const ex = K.examples || {};
     return [
       CORE.replace("LANGUAGE", language === "ko" ? "Korean (formal 합니다체)" : "English"),
       "## The player's rig\n" + rigText(rig),
       "## Blocks on this pedal (name | family | uri)\n" + blockIndex(),
-      "## Guide: what each factory block models\n" + (K.whatBlocksModel || ""),
-      "## Guide: choosing blocks\n" + (K.choosingBlocks || ""),
-      "## Guide: preset document format\n" + (K.presetFormat || ""),
-      "## Example presets read off a device\n" + Object.entries(ex).map(([n, d]) => `${n}:\n${JSON.stringify(d)}`).join("\n\n"),
+      "## Guides (read with read_guide when you need them)\n- what-blocks-model: which real amp, cab, mic, drive and compressor each factory block emulates. Read it before choosing an amp or cab family.\n- choosing-blocks: how to pick a chain for a kind of tone, and mistakes that are easy to repeat.\n- preset-format: the preset document format. Read it before writing your first document.\n- examples: real presets read off a device.",
     ].join("\n\n");
   }
 

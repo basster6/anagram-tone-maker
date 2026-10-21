@@ -319,13 +319,37 @@
     r && r({ answer });
   }
 
+  // Free keys run into per-minute quotas; wait them out instead of failing the whole turn.
+  function patient(provider) {
+    const wrapped = Object.create(provider);
+    wrapped.chat = async (args) => {
+      for (let attempt = 0; ; attempt++) {
+        try { return await provider.chat(args); }
+        catch (e) {
+          const perDay = /per ?day|daily/i.test(e.message || "");
+          if (e.kind !== "rate_limit" || perDay || attempt >= 3 || (args.signal && args.signal.aborted)) throw e;
+          const hinted = /retry in ([\d.]+)\s*s/i.exec(e.message || "");
+          const wait = Math.min(90, Math.ceil(hinted ? +hinted[1] + 1 : 20 * (attempt + 1)));
+          addChat("tool", t("waitingQuota", wait)); drawChat();
+          await new Promise((resolve, reject) => {
+            const timer = setTimeout(resolve, wait * 1000);
+            if (args.signal) args.signal.addEventListener("abort", () => { clearTimeout(timer); reject(Object.assign(new Error("cancelled"), { name: "AbortError" })); }, { once: true });
+          });
+        }
+      }
+    };
+    return wrapped;
+  }
+
   function makeAgent(saved) {
     const cfg = aiConfig();
     const opts = {
-      provider: cfg.provider, key: cfg.key, model: cfg.model,
+      provider: patient(AT.ai.providers[cfg.provider]), key: cfg.key, model: cfg.model,
       system: AT.prompt.build({ rig: settings.get("rig", {}), language: lang }),
       tools: AT.makeTools(Object.assign(app, { measure, reamp, savePreset, askUser, aiConfig, refresh, setCurrent: d => { app.current = d; } })),
       onEvent: onAgentEvent,
+      // keep each request small: old preset dumps and reports are the bulk of it
+      context: { maxChars: 40000, keepTurns: 4, minChars: 600 },
     };
     return saved ? AT.ai.Agent.fromJSON(saved, opts) : new AT.ai.Agent(opts);
   }
@@ -346,7 +370,7 @@
     $("say").value = "";
     addChat("user", text); drawChat();
     app.agent = app.agent || makeAgent();
-    const now = aiConfig(), provider = AT.ai.providers[now.provider];
+    const now = aiConfig(), provider = patient(AT.ai.providers[now.provider]);
     Object.assign(app.agent, { provider, key: now.key, model: now.model || provider.defaultModel([]),
       system: AT.prompt.build({ rig: settings.get("rig", {}), language: lang }) });
     app.abort = new AbortController(); drawStatus();
