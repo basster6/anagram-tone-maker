@@ -6,3 +6,5 @@ reference/.market-cache.json
 *.wav
 measurements/
 studio/
+.venv/
+__pycache__/
