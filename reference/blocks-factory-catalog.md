@@ -1,12 +1,12 @@
 # Anagram factory block catalog
 
-The stock blocks of an Anagram on firmware v1.18.1.23, read from the device itself. Every Anagram on this firmware has these, so a tone built only from them works on anybody's pedal.
+The stock blocks of an Anagram on firmware v1.19.0.16, read from the device itself. Every Anagram on this firmware has these, so a tone built only from them works on anybody's pedal.
 
-99 blocks, 672 parameters.
+101 blocks, 683 parameters.
 
 `sym min..max` is a range, `[a | b]` an enumeration, `(toggle)` on/off, `~` logarithmic.
 
-## Amp & Cabs  (18)
+## Amp & Cabs  (19)
 
 ### Artists Cabinet  `CAB`
 `urn:darkglass-anagram:cabinet-artists`
@@ -71,6 +71,17 @@ The stock blocks of an Anagram on firmware v1.18.1.23, read from the device itse
 - `MidFreq` 0..10 default 5  1dPt  — Mid Freq
 - `Bass` 0..10 default 5  1dPt
 - `Treble` 0..10 default 5  1dPt
+
+### Hi-Five 103  `HIF`
+`urn:darkglass:neural-plugins:hifive103`
+
+- `master` 0..10 default 3  1dPt  — Master
+- `gain` 0..10 default 5  1dPt  — Gain
+- `bass` 0..10 default 6  1dPt  — Bass
+- `middle` 0..10 default 6  1dPt  — Middle
+- `treble` 0..10 default 4  1dPt  — Treble
+- `presence` 0..10 default 5  1dPt  — Presence
+- `output_lvl` 0..10 default 4  1dPt  — Output Level
 
 ### Jim Bass  `JIM`
 `urn:darkglass:JimBass`
@@ -763,7 +774,7 @@ The stock blocks of an Anagram on firmware v1.18.1.23, read from the device itse
 - `modulation` 0..10 default 0  1dPt  — Modulation
 - `trails` (toggle) default 0  — Trails
 
-## Utilities  (27)
+## Utilities  (28)
 
 ### Axioma Mono Synth  `AXO`
 `urn:darkglass:axioma_synth`
@@ -1008,6 +1019,14 @@ The stock blocks of an Anagram on firmware v1.18.1.23, read from the device itse
 - `HSfreq` 1500..16000~ default 8000  Hz  — Highshelf Freq
 - `HSwidth` 0..1 default 0.33  — Highshelf W
 - `HSgain` -18..18 default 0  dB  — Highshelf Gain
+
+### Pheral 91 Phaser  `P91`
+`urn:darkglass:pheral91`
+
+- `speed` 0..10 default 4  1dPt  — Speed
+- `mode` [45 | 90] default 1  — Mode
+- `dialogue` (toggle) default 1  — Dialogue
+- `level` 0..10 default 6  1dPt  — Level
 
 ### Return  `RET`
 `urn:darkglass-anagram:return`
