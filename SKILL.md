@@ -117,6 +117,46 @@ If web search is not available in the current environment, say so rather than
 quietly substituting your own assumptions, and keep the design to blocks whose
 parameters you have actually read.
 
+## When a block they don't own would do it better
+
+Build the tone from what is on the pedal: factory blocks plus what they have
+installed. A preset that uses a block the pedal does not have cannot be auditioned,
+measured or played, so a block they don't own never goes into the document.
+
+Once the tone is built, check whether the research named something the rig only
+approximates: a specific amp, drive or compressor that the tone really rests on,
+or a job no installed block can do (a sweepable mid where every amp has a fixed
+one, an octave down with no octave block). If so, search the shop:
+
+```sh
+python3 tools/cli.py market --all sansamp    # whole shop, "based on" lines and ratings
+python3 tools/cli.py block <uri>             # description and controls of one block
+```
+
+`market --all` searches the shop's own descriptions and, from Anagram Tone Lab
+(anagramblocks.com, a community site), what each block is based on. `block <uri>`
+on a block they don't own prints the vendor's description and, where Tone Lab has
+it, the controls as read off another player's pedal. Read them before suggesting
+anything: say which control would do the job, not just the block's name.
+
+Then suggest at most one or two, after the tone and clearly apart from it:
+
+> Built from what you have, with the factory SVT block. The research all points to
+> a Sansamp in front of it; *Block Name* (Vendor, €29) models one, and its Blend
+> control is what most of these tones lean on. Optional — the preset works without it.
+
+- Suggest a block only when it closes a real gap the research named. If the
+  installed blocks do the job, say nothing about the shop.
+- Give the name, vendor, price and the one reason it matters. No lists of
+  alternatives, no shopping tour.
+- Tone Lab's "based on" lines are the community's reading, and on firmware
+  blocks its own guess; hedge them the way `what-blocks-model.md` does, and credit
+  the site when you quote one.
+- Controls read from Tone Lab are a guide. Once they buy and install a block,
+  `cli.py refresh-blocks` reads its real parameters off the pedal, and only then
+  can you build with it. Offer to rebuild the tone around it at that point.
+- If the player says they don't want purchase suggestions, stop making them.
+
 ## Measure what you made
 
 The pedal is also a USB audio interface with a reamp input, so a tone can be
@@ -340,6 +380,9 @@ takes any action name and payload.
 7. Audition it, **measure it**, and compare the result with what the research
    said. Fix the gaps, one change at a time, measuring after each.
 8. Say plainly that nothing is saved until they save it on the pedal.
+9. If the research named something the rig can only approximate, and a shop
+   block does it, suggest that one block as an optional purchase (see "When a
+   block they don't own would do it better").
 
 Keep the explanation short and about the sound. The user wants a tone, not a
 tour of the JSON.
