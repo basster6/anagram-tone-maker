@@ -300,6 +300,7 @@ python3 tools/cli.py get 13.json          # one preset document
 python3 tools/cli.py validate tone.json   # no device needed
 python3 tools/cli.py audition tone.json   # play it on the pedal, saving nothing
 python3 tools/cli.py market               # what the shop says about your installed blocks
+python3 tools/cli.py market --all [term]  # search the whole shop, owned or not
 python3 tools/cli.py refresh-blocks       # re-read the catalogue after a firmware update
 ```
 

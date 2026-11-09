@@ -70,7 +70,10 @@ another is an SWR — which is the whole decision in most tones.
 
 `cli.py block <uri>` prints the marketplace description alongside the parameters
 for any block the **user installed**. Read it: it says where the controls sit,
-and a control's frequency changes whether the block belongs in the tone.
+and a control's frequency changes whether the block belongs in the tone. For a
+shop block they do not own, `cli.py block <uri>` prints only the description —
+its parameters are unknown until it is installed — and `cli.py market --all
+<term>` finds such blocks.
 
 ## Read the parameters before you choose, not after
 
