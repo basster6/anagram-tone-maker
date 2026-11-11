@@ -220,7 +220,7 @@ def cmd_mode(mode: str) -> int:
     with _midi() as m:
         m.set_mode(mode)
     does = {"preset": "select presets", "stomp": "toggle their bound blocks",
-            "scene": "select scenes 1-3"}[mode]
+            "scene": "select scenes"}[mode]
     print(f"Pedal is in {mode} mode; the footswitches now {does}.")
     return 0
 

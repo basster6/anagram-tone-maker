@@ -13,7 +13,7 @@ description: >
 
 The Darkglass Anagram is a Linux-based multi-effects pedal. A tone is a **preset
 document**: a JSON file describing a signal chain of LV2 blocks, their parameter
-values, up to three scenes, and bindings from the pedal's knobs and footswitches.
+values, up to 126 scenes (3 before KosmOS 1.16), and bindings from the pedal's knobs and footswitches.
 
 This skill lets you design one from a plain-language request, check it, and play
 it on the pedal.
@@ -236,15 +236,17 @@ rows with scenes and bindings, `2.json` carries a cabinet file property.
 
 ## Scenes and bindings — do these unprompted
 
-Setting up three scenes and ten actuators by hand on a pedal screen is miserable,
+Setting up scenes and ten actuators by hand on a pedal screen is miserable,
 which is why most presets never get them. In a document it is a few lines, so
 **build them in by default** and tell the user what you wired. This is usually the
 most useful thing you do for them.
 
-Scenes 1-3 are **deltas** on top of the base values: store only what changes, as an
+Scenes are **deltas** on top of the base values: store only what changes, as an
 array of `{symbol, value}` plus an optional `enabled`. Use them for verse/chorus
 or clean/dirty within one tone. A good default is scene 1 as written, scene 2 a
 pushed version, scene 3 a pulled-back one — adjusted to what the tone is for.
+Since KosmOS 1.16 a preset holds up to 126 scenes (MIDI CC 107 selects 1-126),
+so one preset can hold every part of a song.
 
 Bindings map the pedal's hardware to parameters: `pot1`-`pot6`, `foot1`-`foot3`,
 `exp.pedal`. **Check `actuators` in `rig.yaml` first** - binding the expression

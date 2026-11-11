@@ -112,7 +112,7 @@ class AnagramMidi:
         self.cc(CC_MODE, MODES[mode])
 
     def set_scene(self, scene: int | str) -> None:
-        """A scene number 1-3, "default", or "next"/"prev". Only acts in scene mode."""
+        """A scene number 1-126, "default", or "next"/"prev". Only acts in scene mode."""
         if scene == "next":
             self.cc(CC_SCENE_NEXT)
         elif scene == "prev":
