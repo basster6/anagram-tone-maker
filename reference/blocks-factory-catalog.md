@@ -1,6 +1,6 @@
 # Anagram factory block catalog
 
-The stock blocks of an Anagram on firmware v1.19.0.16, read from the device itself. Every Anagram on this firmware has these, so a tone built only from them works on anybody's pedal.
+The stock blocks of an Anagram on firmware v1.19.2.24, read from the device itself. Every Anagram on this firmware has these, so a tone built only from them works on anybody's pedal.
 
 101 blocks, 683 parameters.
 

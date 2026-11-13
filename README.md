@@ -153,7 +153,7 @@ Anagram.
 
 The block catalogue — every parameter, range, default and enumeration — was read
 from a device over USB, not transcribed, so it is accurate for firmware
-v1.19.0.16 and refreshable with `cli.py refresh-blocks`.
+v1.19.2.24 and refreshable with `cli.py refresh-blocks`.
 
 `reference/what-blocks-model.md` says what each factory block *emulates*. The
 device does not carry that information and Darkglass does not publish it, so it
