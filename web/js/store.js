@@ -45,6 +45,7 @@
   const settings = {
     get(key, fallback = null) { try { const v = localStorage.getItem("at." + key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; } },
     set(key, value) { try { localStorage.setItem("at." + key, JSON.stringify(value)); } catch {} },
+    remove(key) { try { localStorage.removeItem("at." + key); } catch {} },
   };
 
   AT.store = {

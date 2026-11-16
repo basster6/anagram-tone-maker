@@ -1,4 +1,4 @@
-// Browser-only, bring-your-own-key LLM agent layer (Gemini, OpenAI, Anthropic).
+// Browser-only, bring-your-own-key LLM agent layer (Gemini, OpenAI, Anthropic, Qwen, any compatible endpoint).
 // Classic script: exposes AT.ai on the global object. Uses global fetch.
 (function (root) {
   "use strict";
@@ -489,12 +489,12 @@
   const ANTHROPIC_BASE = "https://api.anthropic.com/v1";
   const ANTHROPIC_MAX_TOKENS = 16000;
 
-  function anthropicHeaders(key) {
-    return {
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    };
+  function anthropicHeaders(key, official = true) {
+    const h = { "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" };
+    if (key) h["x-api-key"] = key;
+    // Compatible hosts differ on which header carries the key.
+    if (key && !official) h.authorization = `Bearer ${key}`;
+    return h;
   }
 
   function anthropicId(id) {
@@ -528,94 +528,190 @@
     return content.filter((b) => b.type === "text").map((b) => b.text || "").join("");
   }
 
-  const anthropic = {
+  function anthropicApi({ id, label, baseUrl = ANTHROPIC_BASE, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, tag = label }) {
+    const official = baseUrl === ANTHROPIC_BASE;
+    const base = baseUrl.replace(/\/+$/, "");
+    const anthropicHeadersFor = (key) => anthropicHeaders(key, official);
+    const anthropic = {
+      id, label, keyUrl, keyHint, fallbackModel, keyOptional,
+      def: { id, label, format: "anthropic", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional },
+      _meta: {},
+
+      async listModels(key, { signal } = {}) {
+        const rows = [];
+        let after = "";
+        for (;;) {
+          const url = `${base}/models?limit=1000${after ? "&after_id=" + encodeURIComponent(after) : ""}`;
+          const data = await request(tag, url, { method: "GET", headers: anthropicHeadersFor(key), signal });
+          rows.push(...(data.data || []));
+          if (!data.has_more || !data.last_id) break;
+          after = data.last_id;
+        }
+        for (const m of rows) anthropic._meta[m.id] = m;
+        // The API lists newest first; keep that order but move deprecated models to the end.
+        const active = rows.filter((m) => m.lifecycle !== "deprecated").map((m) => m.id);
+        const old = rows.filter((m) => m.lifecycle === "deprecated").map((m) => m.id);
+        return active.concat(old);
+      },
+
+      defaultModel(models) {
+        if (!models || !models.length) return anthropic.fallbackModel;
+        const line = (id) => (anthropic._meta[id] && anthropic._meta[id].line) || "";
+        return models.find((id) => line(id) === "sonnet") || pickFirst(models, [/sonnet/, /haiku/]);
+      },
+
+      async chat({ key, model, system, history, tools, signal }) {
+        const body = { model, max_tokens: ANTHROPIC_MAX_TOKENS, messages: anthropicMessages(history) };
+        if (system) body.system = system;
+        if (tools && tools.length) {
+          body.tools = tools.map((t) => ({
+            name: t.name,
+            description: t.description || "",
+            input_schema: t.parameters || { type: "object", properties: {} },
+          }));
+        }
+        const data = await request(tag, `${base}/messages`, { headers: anthropicHeadersFor(key), body, signal });
+        const content = data.content || [];
+        if (!content.length && data.stop_reason === "max_tokens") throw new Error(`${tag}: output limit reached before any content`);
+        const toolCalls = content.filter((b) => b.type === "tool_use").map((b) => ({ id: b.id, name: b.name, args: b.input || {} }));
+        // raw.content keeps thinking blocks (with signatures) for exact replay.
+        return { text: anthropicText(content), toolCalls, raw: { provider: "anthropic", content }, stopReason: data.stop_reason };
+      },
+
+      async research(key, model, query, { signal } = {}) {
+        const meta = anthropic._meta[model];
+        const ws = meta && meta.capabilities && meta.capabilities.server_tools && meta.capabilities.server_tools.web_search;
+        if (ws && ws.supported === false) throw new Error(`${tag}: model ${model} does not support the web search tool.`);
+        const tools = [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }];
+        const messages = [{ role: "user", content: query }];
+        const all = [];
+        for (let i = 0; i < 5; i++) {
+          let data;
+          try {
+            data = await request(tag, `${base}/messages`, {
+              headers: anthropicHeadersFor(key), body: { model, max_tokens: ANTHROPIC_MAX_TOKENS, system: RESEARCH_SYSTEM, messages, tools }, signal,
+            });
+          } catch (e) {
+            if (e.status === 400) e.message += ` Web search may be disabled for the organization or unsupported by ${model}.`;
+            throw e;
+          }
+          const content = data.content || [];
+          all.push(...content);
+          if (data.stop_reason !== "pause_turn") break;
+          messages.push({ role: "assistant", content }); // resume a paused server-tool turn
+        }
+        const sources = [];
+        let searchError = "";
+        for (const b of all) {
+          if (b.type === "web_search_tool_result") {
+            if (Array.isArray(b.content)) for (const r of b.content) addSource(sources, r.url, r.title);
+            else if (b.content && b.content.error_code) searchError = b.content.error_code;
+          } else if (b.type === "text") {
+            for (const c of b.citations || []) addSource(sources, c.url, c.title);
+          }
+        }
+        const text = anthropicText(all);
+        if (!text && searchError) throw new Error(`${tag}: web search failed (${searchError})`);
+        return { text, sources };
+      },
+    };
+    return anthropic;
+  }
+
+  const anthropic = anthropicApi({
     id: "anthropic",
     label: "Anthropic Claude",
     keyUrl: "https://platform.claude.com/settings/keys",
     keyHint: "Paid API key (prepaid credits). Separate from a Claude.ai subscription.",
     fallbackModel: "claude-sonnet-5-5",
-    _meta: {},
+    tag: "Anthropic",
+  });
 
-    async listModels(key, { signal } = {}) {
-      const rows = [];
-      let after = "";
-      for (;;) {
-        const url = `${ANTHROPIC_BASE}/models?limit=1000${after ? "&after_id=" + encodeURIComponent(after) : ""}`;
-        const data = await request("Anthropic", url, { method: "GET", headers: anthropicHeaders(key), signal });
-        rows.push(...(data.data || []));
-        if (!data.has_more || !data.last_id) break;
-        after = data.last_id;
+  // ------------------------------------------------- OpenAI-compatible Chat Completions
+  // Qwen Cloud, local servers (Ollama, LM Studio) and most other hosts speak this.
+
+  const SKIP_MODELS = /(embed|rerank|tts|asr|whisper|image|video|wan\d|audio|ocr|-vl|omni|realtime|livetranslate|moderation|deep-research)/i;
+
+  function chatMessages(system, history) {
+    const out = system ? [{ role: "system", content: system }] : [];
+    for (const e of history) {
+      if (e.role === "user") {
+        if (e.text) out.push({ role: "user", content: e.text });
+      } else if (e.role === "assistant") {
+        const m = { role: "assistant", content: e.text || "" };
+        if ((e.toolCalls || []).length) {
+          m.tool_calls = e.toolCalls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: JSON.stringify(c.args || {}) } }));
+        }
+        out.push(m);
+      } else if (e.role === "tool") {
+        out.push({ role: "tool", tool_call_id: e.id, content: resultText(e.result) });
       }
-      for (const m of rows) anthropic._meta[m.id] = m;
-      // The API lists newest first; keep that order but move deprecated models to the end.
-      const active = rows.filter((m) => m.lifecycle !== "deprecated").map((m) => m.id);
-      const old = rows.filter((m) => m.lifecycle === "deprecated").map((m) => m.id);
-      return active.concat(old);
-    },
+    }
+    return out;
+  }
 
-    defaultModel(models) {
-      if (!models || !models.length) return anthropic.fallbackModel;
-      const line = (id) => (anthropic._meta[id] && anthropic._meta[id].line) || "";
-      return models.find((id) => line(id) === "sonnet") || pickFirst(models, [/sonnet/, /haiku/]);
-    },
+  function chatCompat({ id, label, baseUrl, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, prefer = [] }) {
+    const base = String(baseUrl || "").replace(/\/+$/, "");
+    const headers = (key) => (key ? { authorization: `Bearer ${key}` } : {});
+    const p = {
+      id, label, keyUrl, keyHint, fallbackModel, keyOptional,
+      def: { id, label, format: "openai-chat", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional, prefer },
 
-    async chat({ key, model, system, history, tools, signal }) {
-      const body = { model, max_tokens: ANTHROPIC_MAX_TOKENS, messages: anthropicMessages(history) };
-      if (system) body.system = system;
-      if (tools && tools.length) {
-        body.tools = tools.map((t) => ({
-          name: t.name,
-          description: t.description || "",
-          input_schema: t.parameters || { type: "object", properties: {} },
+      async listModels(key, { signal } = {}) {
+        const data = await request(label, `${base}/models`, { method: "GET", headers: headers(key), signal });
+        return rankModels((data.data || data.models || []).map((m) => String(m.id || m.name)).filter((m) => m && !SKIP_MODELS.test(m)));
+      },
+
+      defaultModel(models) {
+        if (!models || !models.length) return p.fallbackModel;
+        return prefer.length ? pickFirst(models, prefer) : models[0];
+      },
+
+      async chat({ key, model, system, history, tools, signal }) {
+        const body = { model, messages: chatMessages(system, history) };
+        if (tools && tools.length) {
+          body.tools = tools.map((t) => ({
+            type: "function",
+            function: { name: t.name, description: t.description || "", parameters: t.parameters || { type: "object", properties: {} } },
+          }));
+        }
+        const data = await request(label, `${base}/chat/completions`, { headers: headers(key), body, signal });
+        const choice = data.choices && data.choices[0];
+        if (!choice) throw new Error(`${label}: no response`);
+        const msg = choice.message || {};
+        const text = typeof msg.content === "string" ? msg.content : Array.isArray(msg.content) ? msg.content.map((c) => c.text || "").join("") : "";
+        const toolCalls = (msg.tool_calls || []).map((c) => ({
+          id: c.id || newId("call_"), name: c.function && c.function.name, args: parseArgs(c.function && c.function.arguments),
         }));
-      }
-      const data = await request("Anthropic", `${ANTHROPIC_BASE}/messages`, { headers: anthropicHeaders(key), body, signal });
-      const content = data.content || [];
-      if (!content.length && data.stop_reason === "max_tokens") throw new Error("Anthropic: output limit reached before any content");
-      const toolCalls = content.filter((b) => b.type === "tool_use").map((b) => ({ id: b.id, name: b.name, args: b.input || {} }));
-      // raw.content keeps thinking blocks (with signatures) for exact replay.
-      return { text: anthropicText(content), toolCalls, raw: { provider: "anthropic", content }, stopReason: data.stop_reason };
-    },
+        if (!text && !toolCalls.length && choice.finish_reason === "length") throw new Error(`${label}: output limit reached before any content`);
+        return { text, toolCalls, raw: { provider: id }, finishReason: choice.finish_reason };
+      },
 
-    async research(key, model, query, { signal } = {}) {
-      const meta = anthropic._meta[model];
-      const ws = meta && meta.capabilities && meta.capabilities.server_tools && meta.capabilities.server_tools.web_search;
-      if (ws && ws.supported === false) throw new Error(`Anthropic: model ${model} does not support the web search tool.`);
-      const tools = [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }];
-      const messages = [{ role: "user", content: query }];
-      const all = [];
-      for (let i = 0; i < 5; i++) {
-        let data;
-        try {
-          data = await request("Anthropic", `${ANTHROPIC_BASE}/messages`, {
-            headers: anthropicHeaders(key), body: { model, max_tokens: ANTHROPIC_MAX_TOKENS, system: RESEARCH_SYSTEM, messages, tools }, signal,
-          });
-        } catch (e) {
-          if (e.status === 400) e.message += ` Web search may be disabled for the organization or unsupported by ${model}.`;
-          throw e;
-        }
-        const content = data.content || [];
-        all.push(...content);
-        if (data.stop_reason !== "pause_turn") break;
-        messages.push({ role: "assistant", content }); // resume a paused server-tool turn
-      }
-      const sources = [];
-      let searchError = "";
-      for (const b of all) {
-        if (b.type === "web_search_tool_result") {
-          if (Array.isArray(b.content)) for (const r of b.content) addSource(sources, r.url, r.title);
-          else if (b.content && b.content.error_code) searchError = b.content.error_code;
-        } else if (b.type === "text") {
-          for (const c of b.citations || []) addSource(sources, c.url, c.title);
-        }
-      }
-      const text = anthropicText(all);
-      if (!text && searchError) throw new Error(`Anthropic: web search failed (${searchError})`);
-      return { text, sources };
-    },
-  };
+      async research() {
+        throw new Error(`${label}: no built-in web search`);
+      },
+    };
+    return p;
+  }
 
-  const providers = { gemini, openai, anthropic };
+  const qwen = chatCompat({
+    id: "qwen",
+    label: "Qwen Cloud",
+    baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    keyUrl: "https://home.qwencloud.com/api-keys",
+    keyHint: "API key from the Qwen Cloud console. The default address is the international region.",
+    fallbackModel: "qwen-plus",
+    prefer: [/^qwen-plus$/, /^qwen-max$/, /^qwen3[\d.]*-max/, /^qwen-flash$/],
+  });
+
+  // A provider from a stored definition: user-registered endpoints, or a built-in at another address.
+  function define(def) {
+    if (def.format === "anthropic") return anthropicApi(def);
+    if (def.format === "openai-chat") return chatCompat(def);
+    throw new Error(`Unknown API format: ${def.format}`);
+  }
+
+  const providers = { gemini, openai, anthropic, qwen };
 
   function resolveProvider(p) {
     if (p && typeof p === "object") return p;
@@ -801,6 +897,7 @@
 
   AT.ai = {
     providers,
+    define,
     Agent,
     researchTool,
     compactHistory,

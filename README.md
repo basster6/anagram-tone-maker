@@ -46,6 +46,9 @@ web/
 
 ## The browser app (no install)
 
+Work in progress: the page works end to end, but its layout and wording are still
+changing.
+
 `web/` does what the skill does without Python, a terminal or an AI agent: open
 it in **Chrome or Edge** from a web address, plug the pedal in, press **Connect**,
 and talk to the assistant in the page. Any static host works, or locally:
@@ -59,9 +62,16 @@ permissions for such a page and hides the audio devices' names and ids, so the
 page cannot send audio to the pedal and measuring fails.
 
 - **The assistant** runs on your own API key, entered under Setup: Gemini (free
-  key from Google AI Studio), OpenAI or Anthropic. The key stays in this browser
-  and goes only to that provider. Web research needs a key that includes search;
-  Gemini's free tier does not.
+  key from Google AI Studio), OpenAI, Anthropic or Qwen Cloud. **Add provider**
+  registers any other endpoint that speaks the OpenAI Chat Completions or the
+  Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed;
+  the server must allow CORS). The key stays in this browser and goes only to that
+  provider. Web research needs a key that includes search; Gemini's free tier, Qwen
+  and custom endpoints fall back to the optional Tavily key.
+- **Without an API key**, use the chat assistant you already have: upload the files
+  listed under "Web chat" below, copy a preset from the Pedal tab with **Copy**,
+  and paste the JSON it answers with under **Preset JSON** to audition or save it.
+  **Copy measurement** gives the assistant what the pedal actually sounded like.
 - **Pedal control** goes over WebHID: presets, audition, save with a backup of
   what the slot held, and a firmware check before any write. Quit Darkglass Suite
   first; it holds the pedal exclusively.

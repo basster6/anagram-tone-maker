@@ -208,8 +208,8 @@
         parameters: obj({ query: str("A specific question or search phrase") }, ["query"]),
         run: async ({ query }, ctx = {}) => {
           const cfg = app.aiConfig(), errors = [];
-          if (cfg.key) {
-            try { return await AT.ai.providers[cfg.provider].research(cfg.key, cfg.model, query, { signal: ctx.signal }); }
+          if (cfg.ready) {
+            try { return await cfg.api.research(cfg.key, cfg.model, query, { signal: ctx.signal }); }
             catch (e) { errors.push(e.message); }
           }
           if (cfg.searchKey) {

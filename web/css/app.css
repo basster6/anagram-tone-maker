@@ -191,3 +191,5 @@ button.pill { background: transparent; cursor: pointer; font-size: 12px; padding
 button.pill:hover { border-color: var(--axis); color: var(--ink); }
 .ask button { white-space: normal; text-align: left; max-width: 100%; }
 .msg { min-width: 0; }
+button.sq { width: 30px; height: 30px; padding: 0; flex: none; }
+[hidden] { display: none !important; }

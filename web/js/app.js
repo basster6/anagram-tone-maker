@@ -75,8 +75,8 @@
     r.className = "pill " + (app.route === true ? "ok" : app.route === false ? "bad" : "warn");
     r.textContent = app.route === true ? t("audioOk") : app.route === false ? t("audioBad") : t("audioOff");
     const cfg = aiConfig();
-    $("aistate").className = "pill " + (cfg.key ? "ok" : "warn");
-    $("aistate").textContent = cfg.key ? t("aiOn", AT.ai.providers[cfg.provider].label, cfg.model || "–") : t("aiOff");
+    $("aistate").className = "pill " + (cfg.ready ? "ok" : "warn");
+    $("aistate").textContent = cfg.ready ? t("aiOn", cfg.api.label, cfg.model || "–") : t("aiOff");
     $("fw").textContent = app.firmware ? (app.firmware.ok ? t("firmware", app.firmware.version) : t("firmwareBad", app.firmware.version)) : "";
     $("fw").className = "hint" + (app.firmware && !app.firmware.ok ? " bad-text" : "");
     $("ublocks").textContent = Object.keys(AT.blocks.catalog.user).length ? t("userBlocks", Object.keys(AT.blocks.catalog.user).length) : "";
@@ -122,7 +122,12 @@
     const el = $("presets");
     if (!app.presetSlots.length) { el.innerHTML = ""; return; }
     el.innerHTML = app.presetSlots.map(p => `<div class="preset"><span class="sl">${esc(p.slot)}</span><span class="nm" title="${esc(p.name)}">${esc(p.name)}</span>
-      <span class="act"><button data-aud="${esc(p.filename)}">${esc(t("audition"))}</button><button data-go="${esc(p.filename)}" title="${esc(t("selectTip"))}">${esc(t("select"))}</button></span></div>`).join("");
+      <span class="act"><button data-aud="${esc(p.filename)}">${esc(t("audition"))}</button><button data-go="${esc(p.filename)}" title="${esc(t("selectTip"))}">${esc(t("select"))}</button><button data-copy="${esc(p.filename)}" title="${esc(t("copyTip"))}">${esc(t("copy"))}</button></span></div>`).join("");
+    el.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => guard(async () => {
+      const doc = await dev.getPreset(b.dataset.copy); if (!doc) return;
+      await copyText(b, JSON.stringify(doc, null, 2));
+      $("pasteslot").value = AT.device.slotLabel(b.dataset.copy);
+    }));
     el.querySelectorAll("[data-aud]").forEach(b => b.onclick = () => guard(async () => {
       const doc = await dev.getPreset(b.dataset.aud); if (!doc) return;
       await dev.audition(doc); app.current = doc;
@@ -134,6 +139,46 @@
   }
 
   async function guard(fn) { try { await fn(); } catch (e) { addChat("error", e.message); drawChat(); } }
+
+  async function copyText(button, text) {
+    await navigator.clipboard.writeText(text);
+    const label = button.textContent;
+    button.textContent = t("copied");
+    setTimeout(() => { button.textContent = label; }, 1500);
+  }
+
+  // ---------- preset JSON from an outside assistant ----------
+  function pastedDoc() {
+    const msg = $("pastemsg");
+    msg.className = "hint bad-text";
+    let doc;
+    try { doc = JSON.parse($("pastejson").value.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, "")); }
+    catch { msg.textContent = t("pasteBad"); return null; }
+    const errors = AT.blocks.validate(doc).filter(i => i.severity === "error");
+    if (errors.length) { msg.textContent = t("pasteInvalid", errors.length) + " " + errors.slice(0, 3).map(i => `${i.path}: ${i.message}`).join(" / "); return null; }
+    msg.textContent = ""; msg.className = "hint";
+    return doc;
+  }
+
+  async function auditionPasted() {
+    const doc = pastedDoc(); if (!doc) return;
+    if (!dev.connected) throw new Error("The pedal is not connected.");
+    await dev.audition(doc); app.current = doc;
+    $("pastemsg").textContent = t("pastePlaying", (doc.preset || {}).name || "");
+  }
+
+  async function savePasted() {
+    const doc = pastedDoc(); if (!doc) return;
+    const r = await savePreset($("pasteslot").value, doc);
+    $("pastemsg").className = "hint " + (r.saved ? "ok-text" : "bad-text");
+    $("pastemsg").textContent = r.saved ? t("saved", r.name, r.slot) : r.declined ? "" : r.reason || (r.errors || []).map(i => i.message).join(" / ");
+  }
+
+  async function copyResult(button) {
+    const last = C.S.measurements[C.S.measurements.length - 1];
+    if (!last) { $("pastemsg").className = "hint bad-text"; $("pastemsg").textContent = t("noMeasurement"); return; }
+    await copyText(button, `Measurement "${last.label}" of the preset through the pedal:\n\n${AT.dsp.summary(last.report)}`);
+  }
 
   async function savePreset(slot, doc) {
     const filename = AT.device.slotFilename(slot), label = AT.device.slotLabel(filename);
@@ -270,9 +315,20 @@
   }
 
   // ---------- assistant ----------
+  // Built-in providers plus endpoints the player registered; compatible ones can move to another address.
+  function providerList() {
+    return [...Object.values(AT.ai.providers), ...settings.get("customProviders", []).map(d => AT.ai.define(d))];
+  }
+
+  function providerById(id) {
+    const p = providerList().find(x => x.id === id) || AT.ai.providers.gemini;
+    const url = p.def && settings.get("base." + p.id, "");
+    return url && url !== p.def.baseUrl ? AT.ai.define(Object.assign({}, p.def, { baseUrl: url })) : p;
+  }
+
   function aiConfig() {
-    const provider = settings.get("provider", "gemini");
-    return { provider, key: settings.get("key." + provider, ""), model: settings.get("model." + provider, ""), searchKey: settings.get("searchKey", "") };
+    const api = providerById(settings.get("provider", "gemini")), provider = api.id, key = settings.get("key." + provider, "");
+    return { provider, api, key, ready: !!key || !!api.keyOptional, model: settings.get("model." + provider, ""), searchKey: settings.get("searchKey", "") };
   }
 
   function addChat(kind, text, extra) { app.chat.push({ kind, text, ts: Date.now() / 1000, ...extra }); saveChat(); }
@@ -282,7 +338,7 @@
     const el = $("chat"); if (!el) return;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
     const cfg = aiConfig();
-    if (!app.chat.length) { el.innerHTML = `<div class="empty">${esc(cfg.key ? t("chatEmpty") : t("needKey"))}</div>`; return; }
+    if (!app.chat.length) { el.innerHTML = `<div class="empty">${esc(cfg.ready ? t("chatEmpty") : t("needKey"))}</div>`; return; }
     el.innerHTML = app.chat.map((m, i) => {
       if (m.kind === "tool") return `<div class="msg tool">· ${esc((t("toolNames") || {})[m.text] || m.text)}</div>`;
       if (m.kind === "error") return `<div class="msg error">${esc(m.text)}</div>`;
@@ -344,7 +400,7 @@
   function makeAgent(saved) {
     const cfg = aiConfig();
     const opts = {
-      provider: patient(AT.ai.providers[cfg.provider]), key: cfg.key, model: cfg.model,
+      provider: patient(cfg.api), key: cfg.key, model: cfg.model,
       system: AT.prompt.build({ rig: settings.get("rig", {}), language: lang }),
       tools: AT.makeTools(Object.assign(app, { measure, reamp, savePreset, askUser, aiConfig, refresh, setCurrent: d => { app.current = d; } })),
       onEvent: onAgentEvent,
@@ -365,12 +421,12 @@
     if (app.abort) { app.abort.abort(); for (const [id, r] of pendingAsks) { pendingAsks.delete(id); r({ cancelled: true }); } return; }
     text = (text || "").trim(); if (!text) return;
     const cfg = aiConfig();
-    if (!cfg.key) { setPane("setup"); addChat("error", t("needKey")); drawChat(); return; }
+    if (!cfg.ready) { setPane("setup"); addChat("error", t("needKey")); drawChat(); return; }
     if (!cfg.model) { await loadModels().catch(() => {}); }
     $("say").value = "";
     addChat("user", text); drawChat();
     app.agent = app.agent || makeAgent();
-    const now = aiConfig(), provider = patient(AT.ai.providers[now.provider]);
+    const now = aiConfig(), provider = patient(now.api);
     Object.assign(app.agent, { provider, key: now.key, model: now.model || provider.defaultModel([]),
       system: AT.prompt.build({ rig: settings.get("rig", {}), language: lang }) });
     app.abort = new AbortController(); drawStatus();
@@ -384,20 +440,45 @@
 
   // ---------- setup ----------
   function drawSetup() {
-    const cfg = aiConfig(), P = AT.ai.providers;
-    $("provider").innerHTML = Object.entries(P).map(([k, p]) => `<option value="${k}" ${k === cfg.provider ? "selected" : ""}>${esc(p.label)}</option>`).join("");
+    const cfg = aiConfig(), p = cfg.api, custom = !(p.id in AT.ai.providers);
+    $("provider").innerHTML = providerList().map(x => `<option value="${esc(x.id)}" ${x.id === cfg.provider ? "selected" : ""}>${esc(x.label)}</option>`).join("");
+    $("delprov").hidden = !custom;
+    $("basefield").hidden = !p.def;
+    $("baseurl").value = p.def ? p.def.baseUrl : "";
     $("apikey").value = cfg.key;
     $("searchkey").value = cfg.searchKey;
-    $("keyurl").href = P[cfg.provider].keyUrl;
-    $("keyhint").textContent = (t("keyHints") || {})[cfg.provider] || P[cfg.provider].keyHint || "";
+    $("keylink").hidden = !p.keyUrl;
+    $("keyurl").href = p.keyUrl || "#";
+    $("keyhint").textContent = custom ? t("customHint") : (t("keyHints") || {})[cfg.provider] || p.keyHint || "";
     const models = settings.get("models." + cfg.provider, []);
-    $("model").innerHTML = (models.length ? models : [cfg.model].filter(Boolean)).map(m => `<option ${m === cfg.model ? "selected" : ""}>${esc(m)}</option>`).join("");
+    $("models").innerHTML = models.map(m => `<option value="${esc(m)}"></option>`).join("");
+    $("model").value = cfg.model;
+    $("model").placeholder = p.fallbackModel ? t("modelPh", p.fallbackModel) : "";
+  }
+
+  function addProvider() {
+    const label = $("pname").value.trim(), baseUrl = $("purl").value.trim();
+    if (!label || !/^https?:\/\/\S+$/.test(baseUrl)) { $("keyhint").textContent = t("provNeeds"); return; }
+    const id = "c-" + Date.now().toString(36);
+    settings.set("customProviders", [...settings.get("customProviders", []), { id, label, baseUrl, format: $("pformat").value, keyOptional: true }]);
+    settings.set("provider", id);
+    $("provform").hidden = true; $("pname").value = ""; $("purl").value = "";
+    app.agent = null; drawSetup(); drawStatus(); drawChat();
+  }
+
+  function deleteProvider() {
+    const cfg = aiConfig();
+    if (!confirm(t("confirmProvider", cfg.api.label))) return;
+    settings.set("customProviders", settings.get("customProviders", []).filter(d => d.id !== cfg.provider));
+    ["key.", "model.", "models.", "base."].forEach(k => settings.remove(k + cfg.provider));
+    settings.set("provider", "gemini");
+    app.agent = null; drawSetup(); drawStatus(); drawChat();
   }
 
   async function loadModels() {
     const cfg = aiConfig();
-    if (!cfg.key) return;
-    const p = AT.ai.providers[cfg.provider];
+    if (!cfg.ready) return;
+    const p = cfg.api;
     const models = await p.listModels(cfg.key);
     settings.set("models." + cfg.provider, models);
     if (!models.includes(cfg.model)) settings.set("model." + cfg.provider, p.defaultModel(models));
@@ -450,10 +531,18 @@
   $("say").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send($("say").value); });
   $("newchat").onclick = () => { if (app.abort) app.abort.abort(); app.agent = null; app.chat = []; saveChat(); drawChat(); };
   $("provider").onchange = () => { settings.set("provider", $("provider").value); app.agent = null; drawSetup(); drawStatus(); drawChat(); };
+  $("addprov").onclick = () => { $("provform").hidden = !$("provform").hidden; if (!$("provform").hidden) $("pname").focus(); };
+  $("psave").onclick = addProvider;
+  $("pcancel").onclick = () => { $("provform").hidden = true; };
+  $("delprov").onclick = deleteProvider;
+  $("baseurl").onchange = () => { settings.set("base." + aiConfig().provider, $("baseurl").value.trim()); app.agent = null; drawSetup(); };
   $("apikey").onchange = () => { settings.set("key." + aiConfig().provider, $("apikey").value.trim()); drawStatus(); drawChat(); loadModels().catch(e => { $("keyhint").textContent = e.message; }); };
   $("searchkey").onchange = () => settings.set("searchKey", $("searchkey").value.trim());
-  $("model").onchange = () => { settings.set("model." + aiConfig().provider, $("model").value); drawStatus(); };
+  $("model").onchange = () => { settings.set("model." + aiConfig().provider, $("model").value.trim()); drawStatus(); };
   $("loadmodels").onclick = () => loadModels().catch(e => { $("keyhint").textContent = e.message; });
+  $("pasteaud").onclick = () => guard(auditionPasted);
+  $("pastesave").onclick = () => guard(savePasted);
+  $("copyresult").onclick = () => guard(() => copyResult($("copyresult")));
   $("lvl").querySelectorAll("button").forEach(b => b.onclick = () => {
     C.level = +b.dataset.l; $("lvl").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); C.drawFR();
   });
@@ -481,10 +570,10 @@
     applyLang();
     const ub = await AT.store.kv.get("userBlocks"); if (ub) AT.blocks.catalog.user = ub;
     const saved = await AT.store.kv.get("chat");
-    if (saved) { app.chat = saved.log || []; if (saved.agent && aiConfig().key) { try { app.agent = makeAgent(saved.agent); } catch { app.agent = null; } } }
+    if (saved) { app.chat = saved.log || []; if (saved.agent && aiConfig().ready) { try { app.agent = makeAgent(saved.agent); } catch { app.agent = null; } } }
     await refresh();
     drawChat(); drawStatus();
-    if (!aiConfig().key) setPane("setup");
+    if (!aiConfig().ready) setPane("setup");
     if (await dev.reconnect().catch(() => false)) await afterConnect();
   })();
 })(window);

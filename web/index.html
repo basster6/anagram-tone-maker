@@ -101,16 +101,35 @@
           <hr class="sep">
           <h2><span data-t="presets"></span> <span class="end"><button class="ghost" id="loadpresets" data-t="refresh"></button></span></h2>
           <div class="presets" id="presets"></div>
+          <hr class="sep">
+          <h2><span data-t="pasteTitle"></span></h2>
+          <textarea id="pastejson" rows="4" data-t-ph="pastePh" spellcheck="false" style="width:100%"></textarea>
+          <div class="row" style="margin-top:8px"><input class="secs" id="pasteslot" placeholder="17A" autocomplete="off">
+            <button id="pasteaud" data-t="audition"></button><button class="primary" id="pastesave" data-t="save"></button>
+            <button id="copyresult" data-t="copyResult" data-t-title="copyResultTip"></button></div>
+          <p class="hint" id="pastemsg"></p>
         </div>
 
         <div class="pane" data-pane="setup" hidden>
           <h2 data-t="aiSection"></h2>
-          <label class="field"><span data-t="provider"></span><select id="provider"></select></label>
-          <label class="field"><span><span data-t="apiKey"></span> · <a id="keyurl" target="_blank" rel="noopener" data-t="getKey"></a></span>
+          <label class="field"><span data-t="provider"></span>
+            <span class="row"><select id="provider" style="flex:1"></select><button id="addprov" data-t="addProvider"></button>
+              <button class="ghost sq" id="delprov" data-t-title="deleteProvider">✕</button></span></label>
+          <div id="provform" hidden>
+            <label class="field"><span data-t="provName"></span><input id="pname" data-t-ph="provNamePh" spellcheck="false"></label>
+            <label class="field"><span data-t="apiFormat"></span><select id="pformat">
+              <option value="openai-chat" data-t="fmtOpenai"></option><option value="anthropic" data-t="fmtAnthropic"></option></select></label>
+            <label class="field"><span data-t="baseUrl"></span><input id="purl" data-t-ph="baseUrlPh" spellcheck="false"></label>
+            <div class="row"><button class="primary" id="psave" data-t="register"></button><button id="pcancel" data-t="cancel"></button></div>
+            <hr class="sep">
+          </div>
+          <label class="field" id="basefield"><span data-t="baseUrl"></span><input id="baseurl" spellcheck="false"></label>
+          <label class="field"><span><span data-t="apiKey"></span><span id="keylink"> · <a id="keyurl" target="_blank" rel="noopener" data-t="getKey"></a></span></span>
             <input id="apikey" type="password" autocomplete="off" spellcheck="false"></label>
           <p class="hint" id="keyhint"></p>
           <label class="field"><span data-t="model"></span>
-            <span class="row"><select id="model" style="flex:1"></select><button id="loadmodels" data-t="loadModels"></button></span></label>
+            <span class="row"><input id="model" list="models" style="flex:1" spellcheck="false" autocomplete="off"><datalist id="models"></datalist>
+              <button id="loadmodels" data-t="loadModels"></button></span></label>
           <label class="field"><span><span data-t="searchKey"></span> · <a href="https://app.tavily.com" target="_blank" rel="noopener" data-t="getKey"></a></span>
             <input id="searchkey" type="password" autocomplete="off" spellcheck="false"></label>
           <p class="hint" data-t="keyNote"></p>

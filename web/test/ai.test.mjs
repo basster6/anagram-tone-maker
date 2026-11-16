@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 vm.runInThisContext(fs.readFileSync(path.join(here, "../js/ai.js"), "utf8"), { filename: "ai.js" });
-const { providers, Agent, researchTool, compactHistory, toGeminiSchema } = globalThis.AT.ai;
+const { providers, define, Agent, researchTool, compactHistory, toGeminiSchema } = globalThis.AT.ai;
 
 // ------------------------------------------------------------ fetch mock
 
@@ -276,6 +276,30 @@ test("openai: listModels filters chat GPT models; defaultModel", async () => {
   assert.deepEqual(ids, ["gpt-6.1-sol", "gpt-6-astra", "gpt-6-luna", "gpt-5.6-terra", "gpt-4.1", "o4-mini"]);
   assert.equal(providers.openai.defaultModel(ids), "gpt-6.1-sol");
   assert.equal(providers.openai.defaultModel([]), "gpt-6.1-sol");
+});
+
+test("chat-compatible: Qwen request, tool round-trip, model list; custom endpoint without a key", async () => {
+  mock(json({ choices: [{ finish_reason: "tool_calls", message: { role: "assistant", content: "", tool_calls: [{ id: "c1", type: "function", function: { name: "measure", arguments: "{\"quick\":true}" } }] } }] }));
+  const h = [{ role: "user", text: "hi" }, { role: "assistant", text: "", toolCalls: [{ id: "c0", name: "list_presets", args: {} }] }, { role: "tool", id: "c0", name: "list_presets", result: { n: 1 } }];
+  const r = await providers.qwen.chat({ key: "k", model: "qwen-plus", system: "sys", history: h, tools: [{ name: "measure", description: "d", parameters: { type: "object", properties: {} } }] });
+  assert.equal(calls[0].url, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions");
+  assert.equal(calls[0].headers.authorization, "Bearer k");
+  assert.deepEqual(calls[0].body.messages.map((m) => m.role), ["system", "user", "assistant", "tool"]);
+  assert.equal(calls[0].body.messages[2].tool_calls[0].function.name, "list_presets");
+  assert.equal(calls[0].body.messages[3].tool_call_id, "c0");
+  assert.equal(calls[0].body.tools[0].function.name, "measure");
+  assert.deepEqual(r.toolCalls, [{ id: "c1", name: "measure", args: { quick: true } }]);
+
+  mock(json({ data: ["qwen-max", "qwen-plus", "text-embedding-v4", "qwen-vl-max", "qwen-flash"].map((id) => ({ id })) }));
+  const ids = await providers.qwen.listModels("k");
+  assert.ok(!ids.includes("text-embedding-v4") && !ids.includes("qwen-vl-max"));
+  assert.equal(providers.qwen.defaultModel(ids), "qwen-plus");
+
+  const local = define({ id: "c-ollama", label: "Ollama", format: "openai-chat", baseUrl: "http://localhost:11434/v1/", keyOptional: true });
+  mock(json({ choices: [{ finish_reason: "stop", message: { content: "ok" } }] }));
+  assert.equal((await local.chat({ key: "", model: "m", history: [{ role: "user", text: "x" }] })).text, "ok");
+  assert.equal(calls[0].url, "http://localhost:11434/v1/chat/completions");
+  assert.equal(calls[0].headers.authorization, undefined);
 });
 
 test("openai: research parses sources and citations", async () => {
