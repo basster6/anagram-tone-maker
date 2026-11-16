@@ -155,6 +155,14 @@ The block catalogue — every parameter, range, default and enumeration — was 
 from a device over USB, not transcribed, so it is accurate for firmware
 v1.18.1.23 and refreshable with `cli.py refresh-blocks`.
 
+What a paid block is and what it is for comes from the **Darkglass Anagram
+Marketplace** itself. `tools/market.py` reads the product catalogue behind the
+shop (`https://api-v2.darkglass.com/shopify/products`) and matches each product to
+a block by the plugin URI in its variant SKU. It fetches on demand and caches the
+result in `reference/.market-cache.json` (gitignored) for a week, so the vendors'
+descriptions are never shipped in this repo. Factory blocks are not sold, so the
+shop has nothing on them.
+
 `reference/what-blocks-model.md` says what each factory block *emulates*. The
 device does not carry that information and Darkglass does not publish it, so it
 comes from the community-maintained **Darkglass Anagram Block List** on the
