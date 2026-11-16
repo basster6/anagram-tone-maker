@@ -45,6 +45,7 @@ wiki uses a different name for the same block it is noted in brackets.
 | Modern ISOBRICK750 / …OD | `…neural-plugins:modern-california-cln` / `-od` | Mesa Big Block 750, clean and overdriven channels |
 | SWE TC650 | `…neural-plugins:swe` | **EBS TD650** — 650 W hybrid tube/solid-state. Hi-fi Swedish voicing |
 | Fruity HB500 *(wiki: Fruity Horror Bass 500)* | `…neural-plugins:fruity` | Orange Terror Bass 500 |
+| Hi-Five 103 *(wiki: Hi-Five 103 Tube Amplifier)* | `…neural-plugins:hifive103` | Hiwatt DR103 (new in v1.19) |
 
 Rough voicing map, for choosing a direction: **Ampeg (Peggy\*) = rock grind and
 mid push. Fender (Leo, Super California) = round vintage. Mesa, Orange, G-K =
@@ -63,7 +64,7 @@ and read the preset back.
 Every bass cabinet has **7 microphone options × 6 positions** (cap on/off axis,
 cone on/off axis, edge on/off axis). Guitar cabinets have 6 mics × 3 positions.
 
-### Bass cabinets (22)
+### Bass cabinets (23)
 
 | Device name | Models |
 |---|---|
@@ -77,6 +78,7 @@ cone on/off axis, edge on/off axis). Guitar cabinets have 6 mics × 3 positions.
 | Peggy 1×15 / 4×10 / 8×10 | Ampeg SVT-15E / SVT-410HE / SVT-810E |
 | Vintage Peggy 8×10 | Ampeg SVT-810E Heritage |
 | Peggy Fliptop 1×15 | Ampeg B-15 Portaflex |
+| SWE Nordline 4×10 | EBS ProLine 410 (new in v1.19) |
 | SWIRL 1×15 / 4×10 / 8×10 | SWR WorkingPro / **Goliath 4×10** / Megoliath 8×10 |
 
 ### Bass microphones (7) — this is where the top end is decided
@@ -169,6 +171,7 @@ controlling.
 | Mint Chocolate Chorus | `urn:darkglass:Chorus` / `ChorusStereo` | Boss CE-2 / CE-2B / CE-5 |
 | Flamingo Flanger | `urn:darkglass:Flanger` / `FlangerStereo` | EHX Electric Mistress / MXR M117 |
 | Pharos Phaser | `urn:darkglass:dark-phaser` | *Generic* — Darkglass says no specific unit; draws on Boss PH-3 |
+| Pheral 91 Phaser | `urn:darkglass:pheral91` | MXR Phase 95 (new in v1.19). `mode` 45 / 90 matches the Phase 95's two circuits. The device files it under Utilities |
 | Vibralis Vibrato | `urn:darkglass:dm-Vibrato` | *Generic* — elements of Boss VB-2 |
 | Tremora Tremolo | `urn:darkglass:dark-tremolo` | *Generic* — elements of Boss TR-2 |
 | Sublime Octaver | `urn:darkglass:Sublime` | Boss OC-2 / EBS OctaBass / Aguilar Octamizer. Mono, rectification — smooth, round, vintage, lazy tracking |

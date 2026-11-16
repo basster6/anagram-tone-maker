@@ -153,7 +153,7 @@ Anagram.
 
 The block catalogue — every parameter, range, default and enumeration — was read
 from a device over USB, not transcribed, so it is accurate for firmware
-v1.18.1.23 and refreshable with `cli.py refresh-blocks`.
+v1.19.2.24 and refreshable with `cli.py refresh-blocks`.
 
 What a paid block is and what it is for comes from the **Darkglass Anagram
 Marketplace** itself. `tools/market.py` reads the product catalogue behind the
