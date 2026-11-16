@@ -92,21 +92,36 @@
   }
 
   const RELAY = "/proxy/";
+  const relayHosts = new Set();
 
-  // Hosts without CORS are called through tools/serve_web.py on the page's own origin.
-  function relayed(url, proxy) {
-    return proxy && root.location ? `${root.location.origin}${RELAY}${url}` : url;
+  // Hosts without CORS are retried through tools/serve_web.py on the page's own origin.
+  function relayUrl(url) {
+    const origin = root.location && /^https?:/.test(root.location.protocol) ? root.location.origin : "";
+    return origin && !url.startsWith(origin) ? `${origin}${RELAY}${url}` : "";
   }
 
   async function request(label, url, { method = "POST", headers = {}, body, signal } = {}) {
     let res, text;
     const h = Object.assign(body !== undefined ? { "content-type": "application/json" } : {}, headers);
+    const init = { method, headers: h, body: body !== undefined ? JSON.stringify(body) : undefined, signal };
+    const host = url.split("/").slice(0, 3).join("/"), relay = relayUrl(url);
     try {
-      res = await fetch(url, { method, headers: h, body: body !== undefined ? JSON.stringify(body) : undefined, signal });
+      if (relayHosts.has(host) && relay) {
+        res = await fetch(relay, init);
+      } else {
+        try {
+          res = await fetch(url, init);
+        } catch (e) {
+          if (isAbort(e) || !relay) throw e;
+          res = await fetch(relay, init);
+          if (res.status === 404 || res.status === 501) throw e; // no relay: plain http.server
+          relayHosts.add(host);
+        }
+      }
       text = await res.text();
     } catch (e) {
       if (isAbort(e) || (signal && signal.aborted)) throw abortError();
-      const err = new Error(`${label}: network error (${(e && e.message) || e}). Check the connection. If the server does not allow calls from a browser (CORS), turn on "Relay through the local server" under Setup.`);
+      const err = new Error(`${label}: network error (${(e && e.message) || e}). Check the connection. A server that does not allow calls from a browser (CORS) is reached only when the page is opened with python3 tools/serve_web.py.`);
       err.kind = "network";
       err.cause = e;
       throw err;
@@ -116,11 +131,6 @@
       data = text ? JSON.parse(text) : null;
     } catch (e) {
       data = text;
-    }
-    if (!res.ok && url.includes(RELAY) && (res.status === 404 || res.status === 501) && typeof data === "string") {
-      const err = new Error(`${label}: the local relay is not running. Open the page with python3 tools/serve_web.py instead of python3 -m http.server.`);
-      err.kind = "network";
-      throw err;
     }
     if (!res.ok) throw httpError(label, res.status, data);
     if (!data || typeof data !== "object") throw new Error(`${label}: unexpected response (not JSON)`);
@@ -540,13 +550,13 @@
     return content.filter((b) => b.type === "text").map((b) => b.text || "").join("");
   }
 
-  function anthropicApi({ id, label, baseUrl = ANTHROPIC_BASE, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, proxy = false, tag = label }) {
+  function anthropicApi({ id, label, baseUrl = ANTHROPIC_BASE, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, tag = label }) {
     const official = baseUrl === ANTHROPIC_BASE;
-    const base = relayed(baseUrl.replace(/\/+$/, ""), proxy);
+    const base = baseUrl.replace(/\/+$/, "");
     const anthropicHeadersFor = (key) => anthropicHeaders(key, official);
     const anthropic = {
       id, label, keyUrl, keyHint, fallbackModel, keyOptional,
-      def: { id, label, format: "anthropic", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional, proxy },
+      def: { id, label, format: "anthropic", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional },
       _meta: {},
 
       async listModels(key, { signal } = {}) {
@@ -662,12 +672,12 @@
     return out;
   }
 
-  function chatCompat({ id, label, baseUrl, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, proxy = false, prefer = [] }) {
-    const base = relayed(String(baseUrl || "").replace(/\/+$/, ""), proxy);
+  function chatCompat({ id, label, baseUrl, keyUrl = "", keyHint = "", fallbackModel = "", keyOptional = false, prefer = [] }) {
+    const base = String(baseUrl || "").replace(/\/+$/, "");
     const headers = (key) => (key ? { authorization: `Bearer ${key}` } : {});
     const p = {
       id, label, keyUrl, keyHint, fallbackModel, keyOptional,
-      def: { id, label, format: "openai-chat", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional, proxy, prefer },
+      def: { id, label, format: "openai-chat", baseUrl, keyUrl, keyHint, fallbackModel, keyOptional, prefer },
 
       async listModels(key, { signal } = {}) {
         const data = await request(label, `${base}/models`, { method: "GET", headers: headers(key), signal });

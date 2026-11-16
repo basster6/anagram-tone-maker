@@ -67,8 +67,8 @@ page cannot send audio to the pedal and measuring fails.
   registers any other endpoint that speaks the OpenAI Chat Completions or the
   Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed).
   A server that does not allow calls from a browser (CORS), such as the Qwen Token
-  Plan address, works with **Relay through the local server**, which goes through
-  `tools/serve_web.py`. The key stays in this browser and goes only to that
+  Plan address, is reached through `tools/serve_web.py`: when a direct call
+  fails, the page retries it through that server. The key stays in this browser and goes only to that
   provider. Web research needs a key that includes search; Gemini's free tier, Qwen
   and custom endpoints fall back to the optional Tavily key.
 - **Without an API key**, use the chat assistant you already have: upload the files
