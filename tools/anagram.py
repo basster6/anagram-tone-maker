@@ -21,9 +21,16 @@ import uuid as _uuid
 from typing import Any
 
 try:
-    import hid
-except ImportError as exc:  # pragma: no cover
-    raise SystemExit("This needs the hidapi package: pip install hidapi") from exc
+    # On Linux the `hidapi` package's plain `hid` module goes through libusb,
+    # which needs the raw USB node and can't share the interface with the
+    # kernel's HID driver. Its `hidraw` module opens /dev/hidraw* instead, which
+    # a udev rule can grant the user. Same API, so prefer it when present.
+    import hidraw as hid
+except ImportError:
+    try:
+        import hid
+    except ImportError as exc:  # pragma: no cover
+        raise SystemExit("This needs the hidapi package: pip install hidapi") from exc
 
 VENDOR_ID = 0x2FA6
 PRODUCT_ID = 0x2500
