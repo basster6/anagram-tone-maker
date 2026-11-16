@@ -38,6 +38,7 @@ tools/
   tonelab.py                  optional: community detail on shop blocks (anagramblocks.com)
   build_reference.py          re-reads the catalogue from a device
   build_web.py                copies the reference material into web/data
+  serve_web.py                serves web/ and relays AI calls for hosts without CORS
 web/
   index.html                  the browser app: open it in Chrome, no install
   js/, css/, data/            its code and bundled reference
@@ -54,7 +55,7 @@ it in **Chrome or Edge** from a web address, plug the pedal in, press **Connect*
 and talk to the assistant in the page. Any static host works, or locally:
 
 ```sh
-python3 -m http.server 8080 --bind 127.0.0.1 -d web   # then open http://localhost:8080
+python3 tools/serve_web.py   # then open http://localhost:8080
 ```
 
 Opening `index.html` straight from disk (`file://`) is not enough: Chrome keeps no
@@ -64,8 +65,10 @@ page cannot send audio to the pedal and measuring fails.
 - **The assistant** runs on your own API key, entered under Setup: Gemini (free
   key from Google AI Studio), OpenAI, Anthropic or Qwen Cloud. **Add provider**
   registers any other endpoint that speaks the OpenAI Chat Completions or the
-  Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed;
-  the server must allow CORS). The key stays in this browser and goes only to that
+  Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed).
+  A server that does not allow calls from a browser (CORS), such as the Qwen Token
+  Plan address, works with **Relay through the local server**, which goes through
+  `tools/serve_web.py`. The key stays in this browser and goes only to that
   provider. Web research needs a key that includes search; Gemini's free tier, Qwen
   and custom endpoints fall back to the optional Tavily key.
 - **Without an API key**, use the chat assistant you already have: upload the files

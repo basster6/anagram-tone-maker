@@ -322,8 +322,9 @@
 
   function providerById(id) {
     const p = providerList().find(x => x.id === id) || AT.ai.providers.gemini;
-    const url = p.def && settings.get("base." + p.id, "");
-    return url && url !== p.def.baseUrl ? AT.ai.define(Object.assign({}, p.def, { baseUrl: url })) : p;
+    if (!p.def) return p;
+    const url = settings.get("base." + p.id, "") || p.def.baseUrl, proxy = settings.get("relay." + p.id, false);
+    return url !== p.def.baseUrl || proxy !== !!p.def.proxy ? AT.ai.define(Object.assign({}, p.def, { baseUrl: url, proxy })) : p;
   }
 
   function aiConfig() {
@@ -445,6 +446,8 @@
     $("delprov").hidden = !custom;
     $("basefield").hidden = !p.def;
     $("baseurl").value = p.def ? p.def.baseUrl : "";
+    $("relayfield").hidden = !p.def;
+    $("relay").checked = !!(p.def && p.def.proxy);
     $("apikey").value = cfg.key;
     $("searchkey").value = cfg.searchKey;
     $("keylink").hidden = !p.keyUrl;
@@ -470,7 +473,7 @@
     const cfg = aiConfig();
     if (!confirm(t("confirmProvider", cfg.api.label))) return;
     settings.set("customProviders", settings.get("customProviders", []).filter(d => d.id !== cfg.provider));
-    ["key.", "model.", "models.", "base."].forEach(k => settings.remove(k + cfg.provider));
+    ["key.", "model.", "models.", "base.", "relay."].forEach(k => settings.remove(k + cfg.provider));
     settings.set("provider", "gemini");
     app.agent = null; drawSetup(); drawStatus(); drawChat();
   }
@@ -536,6 +539,7 @@
   $("pcancel").onclick = () => { $("provform").hidden = true; };
   $("delprov").onclick = deleteProvider;
   $("baseurl").onchange = () => { settings.set("base." + aiConfig().provider, $("baseurl").value.trim()); app.agent = null; drawSetup(); };
+  $("relay").onchange = () => { settings.set("relay." + aiConfig().provider, $("relay").checked); app.agent = null; drawSetup(); };
   $("apikey").onchange = () => { settings.set("key." + aiConfig().provider, $("apikey").value.trim()); drawStatus(); drawChat(); loadModels().catch(e => { $("keyhint").textContent = e.message; }); };
   $("searchkey").onchange = () => settings.set("searchKey", $("searchkey").value.trim());
   $("model").onchange = () => { settings.set("model." + aiConfig().provider, $("model").value.trim()); drawStatus(); };

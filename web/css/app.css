@@ -193,3 +193,4 @@ button.pill:hover { border-color: var(--axis); color: var(--ink); }
 .msg { min-width: 0; }
 button.sq { width: 30px; height: 30px; padding: 0; flex: none; }
 [hidden] { display: none !important; }
+.check { display: flex; gap: 6px; align-items: center; font-size: 13px; margin: -4px 0 12px; cursor: pointer; }
