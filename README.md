@@ -34,7 +34,7 @@ tools/
   studio.py, studio.html      the local studio page and its server
   analyze.py                  profiles how you use the pedal
   midi.py                     preset/scene/mode switching over USB MIDI
-  market.py                   fetches descriptions for installed blocks
+  market.py                   fetches block descriptions from the marketplace
   build_reference.py          re-reads the catalogue from a device
 ```
 
@@ -135,7 +135,7 @@ occupied slot unless you pass `--force`.
 | `cli.py capture <s>` | record yourself playing, dry and wet |
 | `cli.py reamp <wav>` | send a dry take through a preset and analyse the result |
 | `cli.py analyze` | profile what you own and how you use it |
-| `cli.py market` | what the shop says about your installed blocks |
+| `cli.py market` | what the shop says about your installed blocks; `--all` searches the whole shop |
 | `cli.py goto <slot>` | switch preset over MIDI |
 | `cli.py mode <1\|2\|3>` | switch between stomp, scene and binding modes |
 | `cli.py scene <1\|2\|3>` | switch scene |

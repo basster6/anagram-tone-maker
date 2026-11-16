@@ -25,7 +25,7 @@ Command line front end for the Anagram tone maker skill.
     python3 tools/cli.py say "message for the player"
     python3 tools/cli.py target "slap smile" 80=+6 700=-5 3000=+4 [--note why]
     python3 tools/cli.py analyze [dump.json]
-    python3 tools/cli.py market [search-term]
+    python3 tools/cli.py market [--all] [search-term]
     python3 tools/cli.py refresh-blocks
 
 `setup` is the first-run helper: it infers what it can about the rig from the
@@ -97,10 +97,29 @@ def cmd_blocks(needle: str | None) -> int:
     return 0
 
 
+def _print_shop(shop: dict) -> None:
+    print(f"{shop['title']} - {shop['vendor']}  ({shop['productType']})")
+    if shop.get("tags"):
+        print("tags: " + ", ".join(shop["tags"]))
+    if shop.get("description"):
+        print("\n" + shop["description"].strip())
+
+
 def cmd_block(uri: str) -> int:
     blocks = load_blocks()
     spec = blocks.get(uri) or blocks.get(uri.split("#")[0])
     if not spec:
+        try:
+            from market import describe
+            shop = describe(uri)
+        except Exception:
+            shop = None
+        if shop:
+            _print_shop(shop)
+            print("\nNot installed on this pedal, so its parameters are unknown here. "
+                  "Once it is bought and installed,\n`cli.py refresh-blocks` reads "
+                  "its real parameters off the device.")
+            return 0
         matches = [u for u, s in blocks.items() if uri.lower() in (u + s["name"]).lower()]
         print(f'No block "{uri}".' + (f" Did you mean:\n  " + "\n  ".join(matches[:8]) if matches else ""))
         return 1
@@ -111,11 +130,8 @@ def cmd_block(uri: str) -> int:
     except Exception:
         shop = None
     if shop:
-        print(f"\n{shop['title']} - {shop['vendor']}  ({shop['productType']})")
-        if shop.get("tags"):
-            print("tags: " + ", ".join(shop["tags"]))
-        if shop.get("description"):
-            print("\n" + shop["description"].strip())
+        print()
+        _print_shop(shop)
     print()
     for p in spec["params"]:
         if p.get("toggle"):
@@ -457,22 +473,39 @@ def cmd_analyze(dump: str | None) -> int:
     return 0
 
 
-def cmd_market(term: str | None) -> int:
-    """What the marketplace says about blocks, which is the only place that says."""
+def cmd_market(args: list[str]) -> int:
+    """What the marketplace says about blocks, which is the only place that says.
+
+    By default only blocks installed on this pedal are listed. With --all, the
+    whole shop is searched, so blocks the player does not own can be found too;
+    installed ones are marked with *.
+    """
     from market import catalogue
+    show_all = "--all" in args
+    terms = [a for a in args if a != "--all"]
+    term = " ".join(terms).lower() or None
     index = catalogue()
     blocks = load_blocks()
     rows = []
     for uri, shop in index.items():
-        if uri not in blocks and uri.split("#")[0] not in blocks:
+        installed = uri in blocks or uri.split("#")[0] in blocks
+        if not installed and not show_all:
             continue
-        if term and term.lower() not in json.dumps(shop).lower():
+        if term and term not in json.dumps(shop).lower():
             continue
-        rows.append((shop["productType"], shop["title"], shop["vendor"], uri))
-    for product_type, title, vendor, uri in sorted(rows):
-        print(f"  {product_type:<26} {title:<34} {vendor:<24} {uri}")
-    print(f"\n{len(rows)} of your installed blocks are in the shop "
-          f"(factory blocks are not sold, so they never appear).")
+        rows.append((shop["productType"], shop["title"], shop["vendor"], uri, installed))
+    for product_type, title, vendor, uri, installed in sorted(rows):
+        mark = "* " if show_all and installed else "  "
+        print(f"{mark}{product_type:<26} {title:<34} {vendor:<24} {uri}")
+    if show_all:
+        owned = sum(1 for row in rows if row[4])
+        print(f"\n{len(rows)} blocks in the shop{' match' if term else ''}; "
+              f"{owned} of them installed here (marked *).\n"
+              f"`cli.py block <uri>` shows the shop's description of any of them.")
+    else:
+        print(f"\n{len(rows)} of your installed blocks are in the shop "
+              f"(factory blocks are not sold, so they never appear).\n"
+              f"Add --all to search the whole shop, including blocks you do not own.")
     return 0
 
 
@@ -519,7 +552,7 @@ def main(argv: list[str]) -> int:
         if cmd == "say":             return cmd_say(" ".join(rest))
         if cmd == "target":          return cmd_target(rest)
         if cmd == "analyze":         return cmd_analyze(rest[0] if rest else None)
-        if cmd == "market":          return cmd_market(rest[0] if rest else None)
+        if cmd == "market":          return cmd_market(rest)
         if cmd == "refresh-blocks":  return cmd_refresh_blocks()
     except IndexError:
         print(f'"{cmd}" needs an argument. See --help.')
