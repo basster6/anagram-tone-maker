@@ -72,8 +72,10 @@ another is an SWR — which is the whole decision in most tones.
 for any block the **user installed**. Read it: it says where the controls sit,
 and a control's frequency changes whether the block belongs in the tone. For a
 shop block they do not own, `cli.py block <uri>` prints only the description —
-its parameters are unknown until it is installed — and `cli.py market --all
-<term>` finds such blocks.
+its parameters are unknown until it is installed, though Anagram Tone Lab's
+controls list is shown when the site has one — and `cli.py market --all <term>`
+finds such blocks. Suggest one only as described in SKILL.md, "When a block they
+don't own would do it better"; never build it into the preset.
 
 ## Read the parameters before you choose, not after
 

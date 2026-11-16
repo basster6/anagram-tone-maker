@@ -35,6 +35,7 @@ tools/
   analyze.py                  profiles how you use the pedal
   midi.py                     preset/scene/mode switching over USB MIDI
   market.py                   fetches block descriptions from the marketplace
+  tonelab.py                  community detail on shop blocks (anagramblocks.com)
   build_reference.py          re-reads the catalogue from a device
 ```
 
@@ -171,6 +172,14 @@ per-block detail at
 <https://anagramanswers.com/categories/anagram-block-reference.18/>. Thanks to
 whoever keeps those up to date. Those attributions are community research, not
 statements from Darkglass, and the file marks them as such.
+
+For blocks you don't own, `cli.py market --all` and `cli.py block` add what
+**Anagram Tone Lab** — <https://www.anagramblocks.com>, a community review site —
+says each block is based on, its rating and its controls as read off a player's
+pedal. `tools/tonelab.py` reads the site's pages on demand, credits it in the
+output and caches what it read in `reference/.tonelab-cache.json` (gitignored)
+for a week. Its "based on" lines are the site's reading, not vendor statements,
+and the skill hedges them accordingly.
 
 The USB protocol was worked out by observing Darkglass Suite's own HID traffic
 and the device's logs.

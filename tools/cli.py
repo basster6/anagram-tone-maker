@@ -105,6 +105,38 @@ def _print_shop(shop: dict) -> None:
         print("\n" + shop["description"].strip())
 
 
+def _community(shop: dict, full: bool) -> bool:
+    """What Anagram Tone Lab adds: what the block is based on, its rating and,
+    with full=True, its controls as read off someone else's pedal. Returns whether
+    controls were shown."""
+    try:
+        import tonelab
+        entry = tonelab.find(shop["title"], shop.get("vendor"))
+        if not entry:
+            return False
+        info = tonelab.details(entry["id"]) if full else entry
+    except Exception as exc:
+        print(f"\n(Community detail unavailable: {exc})")
+        return False
+    url = info.get("url") or f"{tonelab.SITE}/blocks/{entry['id']}"
+    print(f"\nFrom Anagram Tone Lab, a community site: {url}")
+    if info.get("based_on"):
+        hedge = "  (the site's own guess)" if info.get("based_on_is_guess") else ""
+        print(f"  based on: {info['based_on']}{hedge}")
+    if info.get("instruments"):
+        print(f"  for: {', '.join(info['instruments'])}")
+    if info.get("rating") is not None:
+        print(f"  rating: {info['rating']:.1f} from {info['reviews']} review(s)")
+    if full and info.get("controls"):
+        print("  controls:")
+        for c in info["controls"]:
+            print(f"    {c['name']:<22} {c['type']:<8} {c['range']:<40} default {c['default']}")
+        if info.get("controls_note"):
+            print(f"  ({info['controls_note']})")
+        return True
+    return False
+
+
 def cmd_block(uri: str) -> int:
     blocks = load_blocks()
     spec = blocks.get(uri) or blocks.get(uri.split("#")[0])
@@ -116,9 +148,12 @@ def cmd_block(uri: str) -> int:
             shop = None
         if shop:
             _print_shop(shop)
-            print("\nNot installed on this pedal, so its parameters are unknown here. "
-                  "Once it is bought and installed,\n`cli.py refresh-blocks` reads "
-                  "its real parameters off the device.")
+            shown = _community(shop, full=True)
+            print("\nNot installed on this pedal."
+                  + (" The controls above were read off another player's pedal, as a guide."
+                     if shown else " Its controls are not known here.")
+                  + "\nOnce it is bought and installed, `cli.py refresh-blocks` reads its "
+                    "real parameters off this device.")
             return 0
         matches = [u for u, s in blocks.items() if uri.lower() in (u + s["name"]).lower()]
         print(f'No block "{uri}".' + (f" Did you mean:\n  " + "\n  ".join(matches[:8]) if matches else ""))
@@ -132,6 +167,7 @@ def cmd_block(uri: str) -> int:
     if shop:
         print()
         _print_shop(shop)
+        _community(shop, full=False)
     print()
     for p in spec["params"]:
         if p.get("toggle"):
@@ -486,17 +522,31 @@ def cmd_market(args: list[str]) -> int:
     term = " ".join(terms).lower() or None
     index = catalogue()
     blocks = load_blocks()
+    community: dict = {}
+    if show_all:
+        try:
+            import tonelab
+            community = {uri: tonelab.find(shop["title"], shop.get("vendor")) or {}
+                         for uri, shop in index.items()}
+        except Exception as exc:
+            print(f"(Community detail unavailable: {exc})\n")
     rows = []
     for uri, shop in index.items():
         installed = uri in blocks or uri.split("#")[0] in blocks
         if not installed and not show_all:
             continue
-        if term and term not in json.dumps(shop).lower():
+        if term and term not in (json.dumps(shop) + json.dumps(community.get(uri))).lower():
             continue
         rows.append((shop["productType"], shop["title"], shop["vendor"], uri, installed))
     for product_type, title, vendor, uri, installed in sorted(rows):
         mark = "* " if show_all and installed else "  "
         print(f"{mark}{product_type:<26} {title:<34} {vendor:<24} {uri}")
+        extra = community.get(uri) or {}
+        notes = [f"based on {extra['based_on']}" if extra.get("based_on") else "",
+                 f"{extra['rating']:.1f} ({extra['reviews']})" if extra.get("rating") is not None else "",
+                 extra.get("price") or ""]
+        if any(notes):
+            print("    " + " · ".join(n for n in notes if n))
     if show_all:
         owned = sum(1 for row in rows if row[4])
         print(f"\n{len(rows)} blocks in the shop{' match' if term else ''}; "
