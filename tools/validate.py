@@ -15,7 +15,7 @@ from typing import Any, Iterable
 
 MAX_ROWS = 2
 MAX_SLOTS = 12
-SCENES = (1, 2, 3)
+SCENES = tuple(range(1, 127))  # KosmOS 1.16 raised the limit from 3 to 126
 ACTUATORS = (
     "pot1", "pot2", "pot3", "pot4", "pot5", "pot6",
     "foot1", "foot2", "foot3", "exp.pedal",

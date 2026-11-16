@@ -22,7 +22,7 @@ Every field is optional, but a tone needs `chains`.
 | `chains` | object | the signal chain |
 | `bindings` | object | hardware assignments; omit unused actuators entirely |
 | `scene` | integer | the active scene, **counting from 0** — unlike everything else here |
-| `sceneNames` | object | custom scene names, keys `"1"`-`"3"` |
+| `sceneNames` | object | custom scene names, keys `"1"`-`"126"` |
 | `uuid` | string | 56 lowercase hex digits in `16-8-8-24` groups. The device stores whatever you send, so give a new preset a fresh one |
 
 ## `chains`
@@ -64,8 +64,10 @@ default.
 
 ### `scenes`
 
-Keyed `"1"`-`"3"`, gaps allowed, holding **only what differs** from the base
-values. Note that `parameters` here is an **array**, unlike the block's object.
+Keyed `"1"`-`"126"`, gaps allowed, holding **only what differs** from the base
+values. KosmOS 1.16 raised the limit from 3 to 126; scenes past 3 are stored the
+same way (checked on v1.19: a preset with scenes `"4"` and `"5"` saved, read back
+and recalled intact). Note that `parameters` here is an **array**, unlike the block's object.
 
 ```json
 "scenes": {
@@ -102,7 +104,7 @@ One entry per hardware actuator, keyed `pot1`-`pot6`, `foot1`-`foot3`, `exp.peda
 |---|---|
 | chain rows | 2 |
 | slots per row | 12 |
-| scenes per preset | 3 |
+| scenes per preset | 126 (3 before KosmOS 1.16) |
 | presets per bank | 3 (banks are addressed `01A`, `01B`, `01C`, `02A` …) |
 | preset slots | 126 (42 banks x 3); the file name is the slot number, so `17A` is `49.json` |
 | hardware actuators | 10 |
