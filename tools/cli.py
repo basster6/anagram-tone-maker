@@ -78,10 +78,10 @@ def _firmware_ok(dev, any_firmware: bool) -> bool:
     from anagram import TESTED_FIRMWARE
     version = dev.firmware()["version"].strip()
     parts = tuple(int(x) for x in version.lstrip("v").split(".")[:2] if x.isdigit())
-    if parts == TESTED_FIRMWARE or any_firmware:
+    if parts in TESTED_FIRMWARE or any_firmware:
         return True
-    tested = ".".join(map(str, TESTED_FIRMWARE))
-    print(f"The pedal runs firmware {version}; this tool was built against {tested}.x. "
+    tested = " or ".join(".".join(map(str, line)) + ".x" for line in TESTED_FIRMWARE)
+    print(f"The pedal runs firmware {version}; this tool was built against {tested}. "
           f"Not writing. Pass --any-firmware to write anyway.")
     return False
 

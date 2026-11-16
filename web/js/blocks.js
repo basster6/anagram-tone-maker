@@ -85,7 +85,7 @@
   }
 
   // ---------- validator ----------
-  const MAX_ROWS = 2, MAX_SLOTS = 12, SCENES = [1, 2, 3];
+  const MAX_ROWS = 2, MAX_SLOTS = 12, SCENES = Array.from({ length: 126 }, (_, i) => i + 1);  // KosmOS 1.16 raised the limit from 3 to 126
   const ACTUATORS = ["pot1", "pot2", "pot3", "pot4", "pot5", "pot6", "foot1", "foot2", "foot3", "exp.pedal"];
   const FOOTSWITCHES = new Set(["foot1", "foot2", "foot3"]);
   const UUID_RE = /^[0-9a-f]{16}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{24}$/;
@@ -144,7 +144,7 @@
         }
 
         for (const [sceneKey, delta] of Object.entries(block.scenes || {})) {
-          if (!(isDigits(sceneKey) && SCENES.includes(+sceneKey))) err(`${at} / scene ${sceneKey}`, `A scene must be one of [${SCENES.join(", ")}].`);
+          if (!(isDigits(sceneKey) && SCENES.includes(+sceneKey))) err(`${at} / scene ${sceneKey}`, `A scene must be 1-${SCENES.length}.`);
           const params = delta && delta.parameters;
           if (params != null && !Array.isArray(params)) err(`${at} / scene ${sceneKey}`, "Scene parameters are an array, unlike the block's parameters object.");
           for (const entry of Array.isArray(params) ? params : []) {

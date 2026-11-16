@@ -7,7 +7,7 @@
   const PRODUCT_ID = 0x2500;
   const TAG_BYTE = 0x01;
   const START = "DSTART", END = "DEND";
-  const TESTED_FIRMWARE = [1, 18];
+  const TESTED_FIRMWARE = [[1, 18], [1, 19]];
   const PRESETS_PER_BANK = 3, MAX_PRESET_SLOT = 126;
 
   function slotLabel(filename) {
@@ -166,7 +166,7 @@
     async firmwareOk() {
       const fw = await this.firmware();
       const line = firmwareLine(fw.version);
-      return { version: String(fw.version).trim(), ok: line[0] === TESTED_FIRMWARE[0] && line[1] === TESTED_FIRMWARE[1] };
+      return { version: String(fw.version).trim(), ok: TESTED_FIRMWARE.some(([major, minor]) => line[0] === major && line[1] === minor) };
     }
   }
 

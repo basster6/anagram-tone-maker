@@ -155,7 +155,7 @@ python3 tools/cli.py save 17A tone.json
 Slots run `01A` to `42C` — three per bank, 126 in all. Saving refuses to clobber an
 occupied slot unless you pass `--force`, and whatever a slot held before it is
 replaced or deleted is kept in `backups/` first. Writes are refused on a firmware
-line other than 1.18 unless you pass `--any-firmware`.
+line other than 1.18 or 1.19 unless you pass `--any-firmware`.
 
 ### Commands
 

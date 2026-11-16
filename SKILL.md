@@ -359,7 +359,7 @@ python3 tools/cli.py save 17A tone.json --force  # replace what is there
 ```
 
 The previous contents go to `backups/` before a replace or a delete; tell the user
-the file name it printed. Both refuse on a firmware line other than 1.18 — say so
+the file name it printed. Both refuse on a firmware line other than 1.18 or 1.19 — say so
 rather than passing `--any-firmware` on your own.
 
 Slots are addressed as bank plus letter: `01A`, `01B`, `01C`, `02A` … `42C`, which

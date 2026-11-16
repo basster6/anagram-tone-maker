@@ -38,8 +38,8 @@ REPORT_SIZE = 64
 TAG_BYTE = 0x01
 CHUNK = REPORT_SIZE - 1
 START, END = b"DSTART", b"DEND"
-# The firmware the protocol and the block catalogues were read from.
-TESTED_FIRMWARE = (1, 18)
+# Firmware lines the protocol was verified on; the catalogues come from the last one.
+TESTED_FIRMWARE = ((1, 18), (1, 19))
 
 # Device limits, from mod-connector's build config for this model.
 MAX_ROWS = 2
