@@ -6,6 +6,44 @@ them against the real preset format, and play them on the pedal over USB.
 Everything it knows about the device's blocks was read from the device itself, so
 no parameter, range or enumeration in here is guessed.
 
+## What you need
+
+- A **Darkglass Anagram** and a USB cable. Saving and deleting presets is allowed on
+  firmware 1.18 and 1.19; other versions can read and audition only. Without a
+  pedal you can still design and validate presets.
+- **Python 3** and `pip install hidapi`. Measuring tones through the pedal also needs
+  `numpy scipy sounddevice`.
+- An agent that reads skills:
+  - **Claude Code**, included with Claude Pro and above.
+  - **Codex CLI**, included with ChatGPT Plus and above, or run with an OpenAI API key.
+
+  Measuring and refining a tone takes many steps, so the entry plans can reach their
+  usage limits within a long session.
+- **Darkglass Suite quit** while you work: it holds the pedal exclusively.
+
+| Platform | Pedal control | Measuring |
+|---|---|---|
+| macOS | tested | tested; reamp routing is set in Audio MIDI Setup |
+| Linux | tested on Pop!_OS 24.04 | not tested; routing steps not written yet |
+| Windows | not tested | not tested |
+
+If something does not work on yours, an issue with the error output is very welcome.
+
+## Quick start
+
+```sh
+git clone https://github.com/basster6/anagram-tone-maker.git
+cd anagram-tone-maker
+python3 -m venv .venv && . .venv/bin/activate
+pip install hidapi numpy scipy sounddevice
+```
+
+Then start `claude` or `codex` in that folder and ask for a tone, for example
+"a warm Motown tone with a verse and a chorus scene". Both pick up the skill from
+the repository (`.claude/skills/` and `.agents/skills/`). On the first run the
+assistant reads your blocks and presets off the pedal and asks a few questions
+about your rig before it designs anything.
+
 ## What is in it
 
 ```
@@ -39,56 +77,13 @@ tools/
   build_reference.py          re-reads the catalogue from a device
   build_web.py                copies the reference material into web/data
   serve_web.py                serves web/ and relays AI calls for hosts without CORS
+.claude/skills/, .agents/skills/
+                              entry points that point Claude Code and Codex at SKILL.md
 web/
-  index.html                  the browser app: open it in Chrome, no install
+  index.html                  the browser app (experimental, see below)
   js/, css/, data/            its code and bundled reference
   test/                       node tests (validator, USB framing, DSP, AI layer)
 ```
-
-## The browser app (no install)
-
-Work in progress: the page works end to end, but its layout and wording are still
-changing.
-
-`web/` does what the skill does without Python, a terminal or an AI agent: open
-it in **Chrome or Edge** from a web address, plug the pedal in, press **Connect**,
-and talk to the assistant in the page. Any static host works, or locally:
-
-```sh
-python3 tools/serve_web.py   # then open http://localhost:8080
-```
-
-Opening `index.html` straight from disk (`file://`) is not enough: Chrome keeps no
-permissions for such a page and hides the audio devices' names and ids, so the
-page cannot send audio to the pedal and measuring fails.
-
-- **The assistant** runs on your own API key, entered under Setup: Gemini (free
-  key from Google AI Studio), OpenAI, Anthropic or Qwen Cloud. **Add provider**
-  registers any other endpoint that speaks the OpenAI Chat Completions or the
-  Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed).
-  A server that does not allow calls from a browser (CORS), such as the Qwen Token
-  Plan address, is reached through `tools/serve_web.py`: when a direct call
-  fails, the page retries it through that server. The key stays in this browser and goes only to that
-  provider. Web research needs a key that includes search; Gemini's free tier, Qwen
-  and custom endpoints fall back to the optional Tavily key.
-- **Without an API key**, use the chat assistant you already have: upload the files
-  listed under "Web chat" below, copy a preset from the Pedal tab with **Copy**,
-  and paste the JSON it answers with under **Preset JSON** to audition or save it.
-  **Copy measurement** gives the assistant what the pedal actually sounded like.
-- **Pedal control** goes over WebHID: presets, audition, save with a backup of
-  what the slot held, and a firmware check before any write. Quit Darkglass Suite
-  first; it holds the pedal exclusively.
-- **Measuring** goes over Web Audio. Browsers open the Anagram as a stereo device,
-  so once, in Audio MIDI Setup, select Anagram, Configure Speakers, and set the
-  stereo Left channel to "Virtual Input" (channel 9, the reamp input); the page's
-  Check button confirms it. Browsers cannot read the
-  dry instrument input, so a take to reamp is either an uploaded DI file or the
-  experimental dry capture, which records through a near-transparent preset.
-- Measurements, takes, targets and the conversation stay in the browser
-  (IndexedDB). Nothing is uploaded anywhere.
-
-Run `python3 tools/build_web.py` after editing the reference files the app uses.
-The Python tools below remain the way to work from Claude Code and other agents.
 
 ## Setup
 
@@ -109,15 +104,20 @@ Designing and validating tones works with nothing plugged in; `info`, `presets`,
 > **Quit Darkglass Suite before using the device commands.** It holds the pedal's
 > control interface exclusively, and so does a browser tab that has connected to it.
 
-### Claude Code
+### Claude Code and Codex
 
-Drop this folder into `.claude/skills/anagram-tone-maker/` in your project, or
-`~/.claude/skills/` to have it everywhere. It is picked up by name.
+Run them from this folder and the skill is found on its own: Claude Code reads
+`.claude/skills/`, Codex reads `.agents/skills/`. Both entries point at `SKILL.md`
+at the root. In Codex you can also call it directly with `$anagram-tone-maker`.
 
-### Codex / Cursor / other agents
+To use it from another project, copy or link this folder to
+`~/.claude/skills/anagram-tone-maker/` (Claude Code) or
+`~/.agents/skills/anagram-tone-maker/` (Codex).
 
-Point the agent at `SKILL.md`. For Codex, reference it from `AGENTS.md`; for
-Cursor, from a rule in `.cursor/rules/`. One line is enough:
+### Cursor and other agents
+
+Point the agent at `SKILL.md`, for Cursor from a rule in `.cursor/rules/`. One line
+is enough:
 
 ```
 For Darkglass Anagram tone requests, follow anagram-tone-maker/SKILL.md.
@@ -195,6 +195,51 @@ line other than 1.18 or 1.19 unless you pass `--any-firmware`.
 | `cli.py scene <1\|2\|3>` | switch scene |
 | `cli.py tuner` / `cli.py tap` | toggle the tuner, tap tempo |
 | `cli.py refresh-blocks` | re-read the catalogue after a firmware update |
+
+## The browser app (experimental)
+
+**Not ready for everyday use yet.** The page runs end to end, but its workflow,
+layout and wording are still changing, and it is tested on macOS with Chrome only.
+Use the skill with Claude Code or Codex for real work.
+
+`web/` does what the skill does without Python, a terminal or an AI agent: open
+it in **Chrome or Edge** from a web address, plug the pedal in, press **Connect**,
+and talk to the assistant in the page. Any static host works, or locally:
+
+```sh
+python3 tools/serve_web.py   # then open http://localhost:8080
+```
+
+Opening `index.html` straight from disk (`file://`) is not enough: Chrome keeps no
+permissions for such a page and hides the audio devices' names and ids, so the
+page cannot send audio to the pedal and measuring fails.
+
+- **The assistant** runs on your own API key, entered under Setup: Gemini (free
+  key from Google AI Studio), OpenAI, Anthropic or Qwen Cloud. **Add provider**
+  registers any other endpoint that speaks the OpenAI Chat Completions or the
+  Anthropic Messages API, such as a local Ollama or LM Studio server (no key needed).
+  A server that does not allow calls from a browser (CORS), such as the Qwen Token
+  Plan address, is reached through `tools/serve_web.py`: when a direct call
+  fails, the page retries it through that server. The key stays in this browser and goes only to that
+  provider. Web research needs a key that includes search; Gemini's free tier, Qwen
+  and custom endpoints fall back to the optional Tavily key.
+- **Without an API key**, use the chat assistant you already have: upload the files
+  listed under "Web chat" below, copy a preset from the Pedal tab with **Copy**,
+  and paste the JSON it answers with under **Preset JSON** to audition or save it.
+  **Copy measurement** gives the assistant what the pedal actually sounded like.
+- **Pedal control** goes over WebHID: presets, audition, save with a backup of
+  what the slot held, and a firmware check before any write. Quit Darkglass Suite
+  first; it holds the pedal exclusively.
+- **Measuring** goes over Web Audio. Browsers open the Anagram as a stereo device,
+  so once, in Audio MIDI Setup, select Anagram, Configure Speakers, and set the
+  stereo Left channel to "Virtual Input" (channel 9, the reamp input); the page's
+  Check button confirms it. Browsers cannot read the
+  dry instrument input, so a take to reamp is either an uploaded DI file or the
+  experimental dry capture, which records through a near-transparent preset.
+- Measurements, takes, targets and the conversation stay in the browser
+  (IndexedDB). Nothing is uploaded anywhere.
+
+Run `python3 tools/build_web.py` after editing the reference files the app uses.
 
 ## Privacy
 

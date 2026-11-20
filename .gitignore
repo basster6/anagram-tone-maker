@@ -11,3 +11,5 @@ studio/
 __pycache__/
 backups/
 web/test/fixtures/
+.claude/*
+!.claude/skills/
