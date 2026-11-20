@@ -23,9 +23,15 @@ no parameter, range or enumeration in here is guessed.
 
 | Platform | Pedal control | Measuring |
 |---|---|---|
-| macOS | tested | tested; reamp routing is set in Audio MIDI Setup |
-| Linux | tested on Pop!_OS 24.04 | not tested; routing steps not written yet |
+| macOS | tested | tested |
+| Linux | tested on Pop!_OS 24.04 | not tested |
 | Windows | not tested | not tested |
+
+Measuring plays sine sweeps and test tones straight into the pedal's reamp input
+(USB output 9) and records what comes out, so it needs no routing or cables. The
+sweeps are audible on the pedal's outputs: turn the monitors down and keep your
+hands off the strings while `cli.py measure` runs (about 15 s with `--quick`,
+a minute or so in full). See `reference/measuring-tone.md`.
 
 If something does not work on yours, an issue with the error output is very welcome.
 
