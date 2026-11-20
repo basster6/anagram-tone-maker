@@ -7,6 +7,7 @@ interfaces, and the files the skill expects. Nothing is written to the pedal.
 from __future__ import annotations
 
 import importlib
+import importlib.metadata
 import platform
 import subprocess
 import sys
@@ -52,6 +53,7 @@ def check_packages(r: Report) -> None:
         ("scipy", ["scipy"], "measuring", f"{PIP} scipy"),
         ("sounddevice", ["sounddevice"], "measuring", f"{PIP} sounddevice"),
         ("python-rtmidi", ["rtmidi"], "switching presets over MIDI (optional)", f"{PIP} python-rtmidi"),
+        ("mcp", ["mcp"], "the MCP server for desktop apps (optional)", f"{PIP} mcp"),
     ):
         for name in modules:
             try:
@@ -60,6 +62,11 @@ def check_packages(r: Report) -> None:
                 error = f"{type(exc).__name__}: {exc}"
                 continue
             version = getattr(mod, "__version__", "") or getattr(mod, "version", "")
+            if not isinstance(version, str) or not version:
+                try:
+                    version = importlib.metadata.version(label)
+                except importlib.metadata.PackageNotFoundError:
+                    version = ""
             r.line("OK", label, f"{name} {version}".strip())
             break
         else:

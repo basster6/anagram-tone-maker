@@ -44,7 +44,7 @@ something does not work on yours, an issue with its output is very welcome.
 git clone https://github.com/basster6/anagram-tone-maker.git
 cd anagram-tone-maker
 python3 -m venv .venv && . .venv/bin/activate
-pip install hidapi numpy scipy sounddevice
+pip install hidapi numpy scipy sounddevice mcp
 python3 tools/cli.py doctor
 ```
 
@@ -86,6 +86,7 @@ tools/
   tonelab.py                  optional: community detail on shop blocks (anagramblocks.com)
   build_reference.py          re-reads the catalogue from a device
   doctor.py                   checks the machine is ready (cli.py doctor)
+  mcp_server.py               the same commands as MCP tools, for desktop apps
   build_web.py                copies the reference material into web/data
   serve_web.py                serves web/ and relays AI calls for hosts without CORS
 .claude/skills/, .agents/skills/
@@ -124,6 +125,50 @@ at the root. In Codex you can also call it directly with `$anagram-tone-maker`.
 To use it from another project, copy or link this folder to
 `~/.claude/skills/anagram-tone-maker/` (Claude Code) or
 `~/.agents/skills/anagram-tone-maker/` (Codex).
+
+### Claude Desktop, Codex app and other MCP clients
+
+`tools/mcp_server.py` offers the same commands as MCP tools, so desktop apps can use
+the pedal without a terminal: `read_guide` (the skill and its reference documents),
+`list_presets`, `get_preset`, `validate_preset`, `audition_preset`, `save_preset`,
+`delete_preset`, `measure`, `compare_measurements`, `capture`, `reamp`, `doctor` and
+the rest. Saving and deleting are marked as destructive, so clients ask before
+running them. The server tells the assistant to read the skill before designing
+anything. It needs `pip install mcp` in the same environment.
+
+Register it with the Python inside `.venv`, using absolute paths. On Windows the
+Python is `.venv\Scripts\python.exe`.
+
+Claude Code, for every project:
+
+```sh
+claude mcp add --scope user anagram-tone-maker -- /path/to/anagram-tone-maker/.venv/bin/python /path/to/anagram-tone-maker/tools/mcp_server.py
+```
+
+Claude Desktop, in *Settings > Developer > Edit Config*
+(`claude_desktop_config.json`), then restart the app:
+
+```json
+{
+  "mcpServers": {
+    "anagram-tone-maker": {
+      "command": "/path/to/anagram-tone-maker/.venv/bin/python",
+      "args": ["/path/to/anagram-tone-maker/tools/mcp_server.py"]
+    }
+  }
+}
+```
+
+Codex (CLI and app), in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.anagram-tone-maker]
+command = "/path/to/anagram-tone-maker/.venv/bin/python"
+args = ["/path/to/anagram-tone-maker/tools/mcp_server.py"]
+```
+
+The pedal is opened for each call and released again, so Darkglass Suite can be
+used between calls, but not while a call runs.
 
 ### Cursor and other agents
 

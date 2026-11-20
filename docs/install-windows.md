@@ -28,7 +28,7 @@ git clone https://github.com/basster6/anagram-tone-maker.git
 cd anagram-tone-maker
 py -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install hidapi numpy scipy sounddevice python-rtmidi
+python -m pip install hidapi numpy scipy sounddevice python-rtmidi mcp
 ```
 
 If `Activate.ps1` is refused with "running scripts is disabled on this system",
@@ -44,7 +44,8 @@ in every new PowerShell window before using the tools.
 
 All of these packages ship ready-built for Windows, so nothing needs compiling.
 `numpy scipy sounddevice` are only needed for measuring, `python-rtmidi` only for
-switching presets over MIDI.
+switching presets over MIDI, `mcp` only for the desktop apps (see the README's MCP
+section; on Windows the Python to register is `.venv\Scripts\python.exe`).
 
 ## 3. Connect the pedal
 
