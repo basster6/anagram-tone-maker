@@ -33,7 +33,10 @@ sweeps are audible on the pedal's outputs: turn the monitors down and keep your
 hands off the strings while `cli.py measure` runs (about 15 s with `--quick`,
 a minute or so in full). See `reference/measuring-tone.md`.
 
-If something does not work on yours, an issue with the error output is very welcome.
+On Windows, follow [docs/install-windows.md](docs/install-windows.md). Whatever the
+platform, `python3 tools/cli.py doctor` checks Python, the packages, the pedal's
+control and audio interfaces and the skill files, and says what to fix. If
+something does not work on yours, an issue with its output is very welcome.
 
 ## Quick start
 
@@ -42,6 +45,7 @@ git clone https://github.com/basster6/anagram-tone-maker.git
 cd anagram-tone-maker
 python3 -m venv .venv && . .venv/bin/activate
 pip install hidapi numpy scipy sounddevice
+python3 tools/cli.py doctor
 ```
 
 Then start `claude` or `codex` in that folder and ask for a tone, for example
@@ -81,6 +85,7 @@ tools/
   market.py                   optional: fetches block descriptions from the marketplace
   tonelab.py                  optional: community detail on shop blocks (anagramblocks.com)
   build_reference.py          re-reads the catalogue from a device
+  doctor.py                   checks the machine is ready (cli.py doctor)
   build_web.py                copies the reference material into web/data
   serve_web.py                serves web/ and relays AI calls for hosts without CORS
 .claude/skills/, .agents/skills/
@@ -189,6 +194,7 @@ line other than 1.18 or 1.19 unless you pass `--any-firmware`.
 | `cli.py audition <file>` | play it on the pedal, saving nothing |
 | `cli.py save <slot> <file>` | write into a slot, e.g. `save 17A tone.json` |
 | `cli.py setup` | first run: infer your rig and draft `rig.yaml` |
+| `cli.py doctor` | check Python, packages, the pedal and its audio interface |
 | `cli.py studio` | local page to measure, record, listen and talk to the assistant |
 | `cli.py measure` | measure the current preset: EQ curve, distortion, dynamics, noise |
 | `cli.py compare a b` | what changed between two measurements |

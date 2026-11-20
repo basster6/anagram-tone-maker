@@ -2,6 +2,7 @@
 """
 Command line front end for the Anagram tone maker skill.
 
+    python3 tools/cli.py doctor
     python3 tools/cli.py info
     python3 tools/cli.py blocks [category-substring]
     python3 tools/cli.py block urn:darkglass:B3K
@@ -611,6 +612,9 @@ def main(argv: list[str]) -> int:
         return 0
     cmd, rest = argv[0], argv[1:]
     try:
+        if cmd == "doctor":
+            from doctor import run
+            return run()
         if cmd == "info":            return cmd_info()
         if cmd == "blocks":          return cmd_blocks(rest[0] if rest else None)
         if cmd == "block":           return cmd_block(rest[0])
